@@ -1,0 +1,25 @@
+The Solomon Server and Client
+
+The Spring 2012 semester's CS151 class (Object Oriented Design) at San
+Jose State University has approximately 15 teams of students designing
+and developing a Rock-Paper-Scissors game to pit a human player
+against an automated player with increasingly sophisticated
+heuristics. At the end of the semester, there may be interest in
+hosting a mini-tournament of the team projects. It would be
+instructive and fun to have a means for the programs to play against
+each other, without human intervention.
+
+The Solomon Server serves as an arbiter, facilitator, and automator
+between two disparate, remote instances of a Rock-Paper-Scissors game,
+with no human involvement, to allow a large number of rounds to be
+played in a relatively short amount of time.
+
+The Solomon Client serves as an interface between a team’s RPS game
+implementation and the Solomon Server, allowing any two teams’
+implementations to play each other with a minimum of changes needed to
+each team’s program.  The details of the connection, remote player
+selection, rounds administration, match administration, shared
+parameters negotiation, and protocol, are all transparent to the RPS.
+
+R Brett Wormley
+March 2012
