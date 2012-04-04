@@ -58,7 +58,7 @@
 			CodeGeneration
 		</plugin>
 </profile>
-<XMI xmi.version = '1.2' xmlns:UML = 'org.omg.xmi.namespace.UML' timestamp = 'Wed Mar 28 06:29:08 PDT 2012'>
+<XMI xmi.version = '1.2' xmlns:UML = 'org.omg.xmi.namespace.UML' timestamp = 'Wed Mar 28 19:32:55 PDT 2012'>
   <XMI.header>    <XMI.documentation>
       <XMI.exporter>ArgoUML (using Netbeans XMI Writer version 1.0)</XMI.exporter>
       <XMI.exporterVersion>0.34(6) revised on $Date: 2010-01-11 22:20:14 +0100 (Mon, 11 Jan 2010) $ </XMI.exporterVersion>
@@ -560,7 +560,7 @@
       justification="Center"
     >RemotePlayerList</text>
     <group name="Fig0.2"
-         description="org.argouml.uml.diagram.ui.FigStereotypesGroup[353, 197, 64, 0]"
+         description="org.argouml.uml.diagram.ui.FigStereotypesGroup[353, 197, 115, 0]"
          href="-64--88-1-102-23eba810:13658f45975:-8000:0000000000001049"
          fill="0"
          fillcolor="white"
@@ -574,7 +574,7 @@
       <rectangle name="Fig0.2.0"
         x="353"
         y="197"
-        width="64"
+        width="115"
         height="0"
         fill="0"
         fillcolor="white"
@@ -685,7 +685,7 @@
       justification="Center"
     >RemotePlayer</text>
     <group name="Fig1.2"
-         description="org.argouml.uml.diagram.ui.FigStereotypesGroup[373, 333, 64, 0]"
+         description="org.argouml.uml.diagram.ui.FigStereotypesGroup[373, 333, 93, 0]"
          href="-64--88-1-102-23eba810:13658f45975:-8000:000000000000104A"
          fill="0"
          fillcolor="white"
@@ -699,7 +699,7 @@
       <rectangle name="Fig1.2.0"
         x="373"
         y="333"
-        width="64"
+        width="93"
         height="0"
         fill="0"
         fillcolor="white"
@@ -817,7 +817,7 @@
                         offset="5" />
     </private>
     <path name="Fig2.0"
-      description="org.tigris.gef.presentation.FigPoly"
+      description="org.argouml.gefext.ArgoFigPoly"
       fill="0"
       fillcolor="white"
       stroke="1"
@@ -1117,7 +1117,7 @@
       justification="Center"
     >RemotePlayerSelector</text>
     <group name="Fig5.2"
-         description="org.argouml.uml.diagram.ui.FigStereotypesGroup[341, 81, 64, 0]"
+         description="org.argouml.uml.diagram.ui.FigStereotypesGroup[341, 81, 142, 0]"
          href="-64--88-1-102-23eba810:13658f45975:-8000:000000000000105B"
          fill="0"
          fillcolor="white"
@@ -1131,7 +1131,7 @@
       <rectangle name="Fig5.2.0"
         x="341"
         y="81"
-        width="64"
+        width="142"
         height="0"
         fill="0"
         fillcolor="white"
@@ -1249,7 +1249,7 @@
                         offset="5" />
     </private>
     <path name="Fig6.0"
-      description="org.tigris.gef.presentation.FigPoly"
+      description="org.argouml.gefext.ArgoFigPoly"
       fill="0"
       fillcolor="white"
       stroke="1"
@@ -1306,7 +1306,7 @@
                         offset="5" />
     </private>
     <path name="Fig7.0"
-      description="org.tigris.gef.presentation.FigPoly"
+      description="org.argouml.gefext.ArgoFigPoly"
       fill="0"
       fillcolor="white"
       stroke="1"
