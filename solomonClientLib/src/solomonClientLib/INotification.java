@@ -9,7 +9,7 @@ import solomonserver.Scorecard;
  *
  * @author bwormley
  */
-public interface Notification {
+public interface INotification {
     
     ResultCode requestMatch( String teamName, int numberOfRounds );
     
