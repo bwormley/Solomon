@@ -65,7 +65,7 @@ public class Player extends UnicastRemoteObject implements IResponse
      * @return status of this request.  Possible return values are:
      * TODO: enumerate the return values
      */
-    public ResultCode register( String teamName, Notification notify ) 
+    public ResultCode register( String teamName, INotification notify ) 
     { 
         ResultCode rc;
         rc = Server.getInstance().register( teamName, (IResponse)this );
