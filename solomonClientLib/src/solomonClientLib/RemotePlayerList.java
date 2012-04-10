@@ -8,10 +8,7 @@ import java.util.ArrayList;
 import javax.swing.ListModel;
 import javax.swing.event.ListDataEvent;
 import javax.swing.event.ListDataListener;
-import solomonserver.IPlayerListListener;
-import solomonserver.ListAction;
-import solomonserver.PlayerEntry;
-import solomonserver.ResultCode;
+import solomonserver.*;
 import static solomonserver.ResultCode.*;
 
 /**
@@ -59,11 +56,21 @@ public class RemotePlayerList extends UnicastRemoteObject
     
     public void refresh()
     {
-        list = Server.getInstance().getAvailablePlayersList();
+        // get the whole list
+        ArrayList<PlayerEntry> tempList = Server.getInstance().getAvailablePlayersList();
         if (!bListening) {
             Server.getInstance().addPlayerListListener(this);
             bListening = true;
         }
+        
+        // only include available players who are not us
+        ArrayList<PlayerEntry> tempList2 = new ArrayList<PlayerEntry>();
+        for ( PlayerEntry entry: tempList ) {
+            if (entry.state==ConnectionState.AVAILABLE_FOR_PLAY
+                    && entry.id!=Server.getInstance().playerID)
+                tempList2.add(entry);
+        }
+        list = tempList2;
     }
 
     /* *********************************
@@ -118,7 +125,11 @@ public class RemotePlayerList extends UnicastRemoteObject
         int index = -1;
         
         // if a removal, find and remove it, and report it to JListBox
-        if (e.event==ListAction.Action.REMOVE) {
+        // Note: it might not be in our list
+        // note: might be a CHANGE to not AVAILABE: for us, means REMOVE
+        if (e.event==ListAction.Action.REMOVE 
+                || (e.event==ListAction.Action.CHANGE 
+                    && e.player.state!=ConnectionState.AVAILABLE_FOR_PLAY)) {
             for ( int ix=0; ix<list.size(); ix++ ) {
                 if (e.player.teamName.equals(list.get(ix).teamName)
                     && e.player.origin.equals(list.get(ix).origin)) {
@@ -136,7 +147,10 @@ public class RemotePlayerList extends UnicastRemoteObject
         }
         
         // if an addition, add it, and report it to JListBox
-        else if (e.event==ListAction.Action.ADD) {
+        // note: only add if its an AVAILABLE_FOR_PLAY player
+        // note: might be a CHANGE to AVAILABLE_FOR_PLAY, which for us means ADD
+        else if ((e.event==ListAction.Action.ADD || e.event==ListAction.Action.CHANGE)
+                && e.player.state==ConnectionState.AVAILABLE_FOR_PLAY) {
             list.add(e.player);   
             index = list.size() - 1;
             if (listener!=null) {
@@ -146,6 +160,8 @@ public class RemotePlayerList extends UnicastRemoteObject
                 }
             }
         }
+        
+        // if a change, only 
         
         return RC_OK;
     }

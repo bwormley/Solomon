@@ -1,10 +1,12 @@
 package solomonClientLib;
 
 
+import java.net.MalformedURLException;
 import java.rmi.Naming;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import solomonserver.*;
 
 import static solomonserver.ResultCode.*;
@@ -20,6 +22,26 @@ public class Server  {
     
     private static Server _instance = null;
     private IConnection conn = null;
+    int playerID = 0;
+    
+    /**
+     * This is the delay for a non-fatal error from the server before 
+     * retrying the command.  This allows the protocol to resynchronize with 
+     * the remote player without pummeling  the server.
+     */
+    static final int SYNCHRONIZING_LATENCY = 0;//50;
+    
+    /**
+     * Max retries to doGesture before declaring us fatally out of 
+     * synchronization.
+     */
+    static final int DO_GESTURE_MAX_RETRIES = 50;
+    
+    /**
+     * Max retries to getScore before declaring  us fatally out of
+     * synchronization.
+     */
+    static final int GET_SCORE_MAX_RETRIES = 50;
     
     private Server()
     {
@@ -45,11 +67,32 @@ public class Server  {
             // find the server and register with it
             IRegistrar registrar = (IRegistrar) Naming.lookup("Registrar"); // TODO global name
             conn = registrar.register( teamName, response );
+            if (conn==null)
+                rc =  E_REGISTRATION_FAILED;
+            else {
+                    playerID = conn.getID();
+                    if (playerID==0) {
+                        rc = E_REGISTRATION_FAILED;
+                        conn.terminateConnection(E_REGISTRATION_FAILED);
+                        conn = null;
+                    }
+            }
         }
-        catch (Exception e)
+        catch (MalformedURLException e)
+        {
+            System.out.println( "ClientLib URL failed binding the Registrar for team '"+teamName+"': "+e);
+            rc = E_SERVER_NOT_FOUND;             
+            
+        }
+        catch (NotBoundException e)
+        {
+            System.out.println( "ClientLib failed binding the Registrar for team '"+teamName+"': "+e);
+            rc = E_SERVER_NOT_FOUND;             
+        }
+        catch (RemoteException e)
         {
             // TODO log extraordinary circumstances
-            System.out.println( "Solomon Client Lib failed registering team '"+teamName+"': "+e);
+            System.out.println( "ClientLib failed registering team '"+teamName+"': "+e);
             rc = E_SERVER_NOT_FOUND; 
         }
         return rc;
@@ -62,11 +105,11 @@ public class Server  {
         if (conn!=null) {
             try
             {
-                list =  conn.getAvailablePlayerList();
+                list =  conn.getPlayerList();
             }
             catch (RemoteException e)
             {
-                System.out.println( "Client.Lib conn.getAvaillablePlayerList returned " + e );
+                System.out.println( "ClientLib conn.getAvailablePlayerList returned " + e );
             }
         }
         return list;
@@ -75,17 +118,34 @@ public class Server  {
     public ResultCode doGesture( Gesture g )
     {
         ResultCode rc = RC_OK;
-        
+        int retryCount = DO_GESTURE_MAX_RETRIES;
+        final EnumSet<ResultCode> FATAL_RC 
+            = EnumSet.of( RC_MATCH_ENDED,
+                          E_UNRECOGNIZED_PLAYER,
+                          E_MATCH_ENDED,
+                          E_SERVER_DOWN,
+                          E_NO_CONNECTION );
+
         try
         {
             if (conn==null)
                 rc = E_NO_CONNECTION;
-            else
+            else do {
                 rc = conn.doGesture(g);
+                if (rc!=RC_OK) {
+                    try { Thread.sleep(SYNCHRONIZING_LATENCY); }
+                    catch (InterruptedException e) {}
+                }
+            } while (rc!=RC_OK 
+                    && !FATAL_RC.contains(rc)
+                    && --retryCount>0 );
+            if (retryCount==0) {
+                rc = E_LOSS_OF_SYNCHRONIZATION;
+            }
         }
         catch (RemoteException e)
         {
-            // TODO log extraordinary circumstance
+            
         }
         return rc;
     }
@@ -93,15 +153,38 @@ public class Server  {
     public Scorecard getScore()
     {
         Scorecard score = null;
+        ResultCode rc = RC_OK;
+        int retryCount = GET_SCORE_MAX_RETRIES;
+        final EnumSet<ResultCode> FATAL_RC
+                = EnumSet.of( RC_MATCH_ENDED, 
+                              E_SCORE_NOT_AVAILABLE,
+                              E_NO_CONNECTION );
         try
         {
-            if (conn!=null)
+            if (conn==null)
+                rc = E_NO_CONNECTION;
+            else do {
                 score = conn.getScorecard();
+                if (score==null) { rc = E_SCORE_NOT_AVAILABLE; }
+                else {
+                    rc = score.rc;
+                    if (rc!=RC_OK) {
+                        try { Thread.sleep(SYNCHRONIZING_LATENCY); }
+                        catch (InterruptedException e) {}
+                    }
+                }
+            } while (rc!=RC_OK 
+                    && !FATAL_RC.contains(rc) 
+                    && --retryCount>0 );
+            if (retryCount==0)
+                rc = E_LOSS_OF_SYNCHRONIZATION;
         }
         catch (RemoteException e)
         {
             // TODO log extraordinary circumstance
         }
+        if (score!=null)
+            score.rc = rc;
         return score;
     }
     

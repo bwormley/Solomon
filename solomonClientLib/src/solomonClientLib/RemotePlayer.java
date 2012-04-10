@@ -1,50 +1,51 @@
 package solomonClientLib;
 
 
-import java.io.Serializable;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import solomonserver.*;
-import static solomonserver.ResultCode.E_NOT_IMPLEMENTED;
 import static solomonserver.ResultCode.*;
 
 /**
- *
+ * This class is the interface between a team's RPS project and an external 
+ * player (usually in the form of another team's RPS project, as arbitrated by 
+ * the Solomon Server.  It isolates the caller from details about remote player 
+ * selection and negotiation, server callbacks, and network events and errors.
  * 
+ * This is a singleton class; the single instance may be retrieved at any point 
+ * in the RPS program.
  */
-public class Player extends UnicastRemoteObject implements IResponse
-{
-    /*
-     * SYNC INTERFACE
-     * --------------
-     * register - register with server                     MANDATORY (need team name, callbacks)
-     * startMatch - initiate negotiationc                  MANDATORY
-     * doGesture - make a throw FIRST                      MANDATORY
-     * getRoundResult - round result                       MANDATORY (if sync mode)
-     * abortMatch
-     * terminateSession - RPS shutting down (unregister)   RECOMMENDED (graceful shutdown)
+public class RemotePlayer 
+        extends UnicastRemoteObject 
+        implements IResponse
+{    
+    /**
+     * Private constructor, for singleton implementation
      * 
-     * ADMINISTRATIVE SYNC
-     * -------------------
-     * pushLog - send logging to server
-     * 
-     * ADMINISTRATIVE ASYNC CALLBACK
-     * -----------------------------
-     * setLog - turn on,off,level
+     * @throws RemoteException 
      */
-    
-    private Player() throws RemoteException {}
+    private RemotePlayer() throws RemoteException {}
+
+    /**
+     * The singleton instantiation of this class
+     */
+    private static RemotePlayer _instance = null;
 
     /* ****************************************
      * PUBLIC APPLICATION PROGRAMMING INTERFACE
      * ****************************************
      */
-    private static Player _instance = null;
-    public static Player getInstance() 
+    
+    /**
+     * The static method to create/acquire the singleton instance
+     * 
+     * @return the instance
+     */
+    public static RemotePlayer getInstance() 
     { 
         if (_instance==null) {
             try {
-                _instance = new Player();
+                _instance = new RemotePlayer();
             }
             catch (Exception e)
             {
@@ -56,19 +57,22 @@ public class Player extends UnicastRemoteObject implements IResponse
     
     /**
      * Register with the Solomon Server, in preparation for starting a match.  
-     * This must be the first call to the Solomon Client library.
+     * This must be the first call to the RemotePlayer object.
      * 
      * @param teamName unique name identifying the team to other 
-     * potential opponents
+     * potential opponents.  The name must be unique per IP address.
      * @param notify Listener-style argument to receive optional callbacks 
      * when certain events happen
      * @return status of this request.  Possible return values are:
-     * TODO: enumerate the return values
+     * TODO: enumerate the return values:
+     *     RC_OK - this client was successfully registered
      */
     public ResultCode register( String teamName, INotification notify ) 
     { 
         ResultCode rc;
         rc = Server.getInstance().register( teamName, (IResponse)this );
+        if (rc==RC_OK)
+            this.notify = notify;
         return rc; 
     }
     
@@ -88,7 +92,7 @@ public class Player extends UnicastRemoteObject implements IResponse
      */
     public ResultCode startMatch( int numberOfRounds ) 
     { 
-        // or block, waiing for an invitation
+        // or block, waiting for an invitation
         // or list of available players dialog also shows current request
         
         // get list, display list (incl invitation), make selection
@@ -107,6 +111,8 @@ public class Player extends UnicastRemoteObject implements IResponse
         PlayerEntry opponentPlayer = rpSel.getOpponentPlayer();
         if (opponentPlayer!=null)
             opponentName = opponentPlayer.teamName;
+        
+        GameStatus.main(args);
         
         return RC_OK; 
     }
@@ -143,6 +149,8 @@ public class Player extends UnicastRemoteObject implements IResponse
      * move, the current score, and the round number.  The Scorecard object 
      * also contains a ResultCode which may be useful in determining match 
      * status, such as whether the match has ended.
+     * 
+     * Also, whenever we update the  score, we update the GameStatus GUI.
      * 
      * @return object containing fields describing the match status
      */
@@ -185,26 +193,35 @@ public class Player extends UnicastRemoteObject implements IResponse
      * ******************************
      */
 
+    private INotification notify;
+    
     @Override
-    public boolean requestToInitiateMatch(String teamName, int maxNumberOfRounds) throws RemoteException {
-        System.out.printf( "Lunar.requestToInitiateMatch(%s,%d) ACCEPTING\n", teamName, maxNumberOfRounds );
-        opponentName = teamName;
-        return true;
-    }
-
-    @Override
-    public void abortMatch() throws RemoteException {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
-    public void abortConnection(ResultCode rc) throws RemoteException {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
-    public ResultCode notifyScore(Scorecard score) throws RemoteException {
+    public ResultCode requestToInitiateMatch(String teamName, int maxNumberOfRounds) 
+            throws RemoteException {
+        if (notify!=null)
+            return notify.requestMatch( teamName, maxNumberOfRounds );
         return E_NOT_IMPLEMENTED;
     }
 
+    @Override
+    public void abortMatch() 
+            throws RemoteException {
+        if (notify!=null)
+            notify.abortMatch( RC_OK );
+    }
+
+    @Override
+    public void abortConnection(ResultCode rc) 
+            throws RemoteException {
+        if (notify!=null)
+            notify.endSession(rc);
+    }
+
+    @Override
+    public ResultCode notifyScore(Scorecard score) 
+            throws RemoteException {
+        if (notify!=null)
+            return notify.notifyScore(score);
+        return E_NOT_IMPLEMENTED;
+    }
 }
