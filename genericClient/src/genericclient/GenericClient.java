@@ -5,7 +5,7 @@
 package genericclient;
 
 import java.util.Random;
-import solomonClientLib.Player;
+import solomonClientLib.RemotePlayer;
 import solomonserver.Gesture;
 import solomonserver.ResultCode;
 
@@ -15,8 +15,14 @@ import solomonserver.Scorecard;
 import solomonClientLib.INotification;
 
 /**
+ * This is an ultra simple, minimalist implementation of an RPS client of 
+ * Solomon Server.  Except for being able to accept a remote match request, this
+ * client can play an automated match with a remote player.
+ * 
+ * The team name for this client is taken from the first argument in the 
+ * command line.
  *
- * @author bwormley
+ * @author R Brett Wormley
  */
 public class GenericClient implements INotification {
 
@@ -35,7 +41,7 @@ public class GenericClient implements INotification {
         boolean bDone = false;
         
         // get the remote player object
-        Player fred = Player.getInstance();
+        RemotePlayer fred = RemotePlayer.getInstance();
         
         // register with the server
         rc = fred.register( args[0], this );
@@ -44,7 +50,7 @@ public class GenericClient implements INotification {
             System.exit(1);
         }
         
-        // request a match
+        // request/start a match
         rc = fred.startMatch( numberOfRounds );
         if (rc!=RC_OK) {
             System.out.println( "Failed to start match: " + rc );
@@ -56,7 +62,7 @@ public class GenericClient implements INotification {
             rc = fred.doGesture(newG());
             score = fred.getScore();
             if (score!=null) {
-                System.out.printf( "GenericClient.%s:     round %d/%d    %d/%d/%d  rc=%s\n",
+                System.out.printf( "GenericClient.%s:     round %d/%d    WIN/LOSS/TIE %d/%d/%d  rc=%s\n",
                     args[0],
                     score.roundsPlayed, 
                     score.maxRounds,
@@ -66,7 +72,7 @@ public class GenericClient implements INotification {
                     score.rc );
                  bDone = score.roundsPlayed>0 && score.roundsPlayed>=score.maxRounds;
             }
-             Thread.sleep(1000);
+//             Thread.sleep(100);
 
         } while (!bDone);
     }
@@ -96,16 +102,13 @@ public class GenericClient implements INotification {
     }
 
     @Override
-    public ResultCode notifyMatchResult(Scorecard score) {
-        return E_NOT_IMPLEMENTED;
-    }
-
-    @Override
     public void abortMatch(ResultCode rc) {
+        // NOT IMPLEMENTED
     }
 
     @Override
     public void endSession(ResultCode rc) {
+        // NOT IMPLEMENTED
     }
 
 }
