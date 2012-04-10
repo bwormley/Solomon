@@ -22,7 +22,7 @@ public interface IConnection extends Remote {
     Scorecard getScorecard() 
             throws RemoteException;
     
-    ArrayList<PlayerEntry> getAvailablePlayerList() 
+    ArrayList<PlayerEntry> getPlayerList() 
             throws RemoteException;
     
     void addPlayerListListener( IPlayerListListener listener )
@@ -31,4 +31,9 @@ public interface IConnection extends Remote {
     void removePlayerListListener( IPlayerListListener listener )
             throws RemoteException;
     
+    int getID()
+            throws RemoteException;
+    
+    void keepAlive()
+            throws RemoteException;
 }

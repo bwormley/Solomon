@@ -28,6 +28,6 @@ public class PlayerEntry implements Serializable {
     @Override
     public String toString()
     {
-        return teamName + " @ " + origin;
+        return String.format( "%12s @ %-15s  %s", teamName, origin, state );
     }
 }

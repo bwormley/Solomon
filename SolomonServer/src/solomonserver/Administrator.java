@@ -25,7 +25,7 @@ public class Administrator
     @Override
     public ArrayList<PlayerEntry> getPlayerList() throws RemoteException
     {
-        return ConnectionTable.getInstance().getPlayerList( ConnectionTable.Filter.ALL, null );
+        return ConnectionTable.getInstance().getPlayerList( null );
     }
 
     @Override

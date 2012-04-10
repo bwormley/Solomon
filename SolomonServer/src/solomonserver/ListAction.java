@@ -12,7 +12,7 @@ public class ListAction implements Serializable {
         this.player = player;
     }
     
-    public enum Action { ADD, REMOVE };
+    public enum Action { ADD, CHANGE, REMOVE };
     
     public Action event;
     public PlayerEntry player;

@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
+import java.util.Date;
 import static solomonserver.ResultCode.*;
 
 public class Connection extends UnicastRemoteObject implements IConnection, Serializable {
@@ -12,6 +13,8 @@ public class Connection extends UnicastRemoteObject implements IConnection, Seri
     private String origin = null;
     private IResponse response;
     private Match match = null;
+    private Date lastKeepAliveReceived = new Date();
+    private boolean bNotAcceptingMatches = false;
 
     private ConnectionState state = ConnectionState.DISCONNECTED;
         
@@ -47,14 +50,24 @@ public class Connection extends UnicastRemoteObject implements IConnection, Seri
      * 
      * @return unique ID
      */
+    @Override
     public int getID()
     {
         return this.hashCode();
     }
     
     @Override
-    public void terminateConnection( ResultCode rc ) throws RemoteException {
-        // TODO: implement, terminate match if needed
+    public void keepAlive()
+            throws RemoteException
+    {
+        lastKeepAliveReceived = new Date();
+    } 
+           
+    
+    @Override
+    public void terminateConnection( ResultCode rc ) 
+            throws RemoteException {
+// terminate match, other connection, my 
     }
 
     @Override
@@ -66,27 +79,31 @@ public class Connection extends UnicastRemoteObject implements IConnection, Seri
         if (state!=ConnectionState.AVAILABLE_FOR_PLAY)
             return E_WRONG_STATE;
         
-        state = ConnectionState.REQUEST_IN_PROGRESS;
+        changeState( ConnectionState.REQUEST_IN_PROGRESS );
         
         System.out.println("Server: Connection.requestRemoteMatch() entry");
 
         Connection player2 = ConnectionTable.getInstance().getPlayer( playerID );
         if (player2==null) {
-            state = ConnectionState.AVAILABLE_FOR_PLAY;
+            changeState( ConnectionState.AVAILABLE_FOR_PLAY );
             System.out.printf( "Server: Connection.requestRemoteMatch(): player not found (ID=%08x)\n", playerID);
             rc = E_UNRECOGNIZED_PLAYER;
         }
             
         else {
+            if (match!=null) {
+                MatchTable.getInstance().removeMatch(this,match);
+            }
             match = new Match( this, player2, maxNumberOfRounds );
             rc = player2.requestMatch( this, match, maxNumberOfRounds );
             if (rc==RC_OK) {
                 System.out.printf( "Server: BEGIN match between %s and %s\n", this.getTeamName(), player2.getTeamName() );
-                state = ConnectionState.MATCH_IN_PLAY;
+                MatchTable.getInstance().addMatch(match);
+                changeState( ConnectionState.MATCH_IN_PLAY );
             }
             else {
                 match = null;
-                state = ConnectionState.AVAILABLE_FOR_PLAY;
+                changeState( ConnectionState.AVAILABLE_FOR_PLAY );
             }
         }
         return rc;
@@ -99,33 +116,42 @@ public class Connection extends UnicastRemoteObject implements IConnection, Seri
     {
         ResultCode rc = RC_OK;
         
+        // don't ask if we're busy
         if (state!=ConnectionState.AVAILABLE_FOR_PLAY)
             return E_WRONG_STATE;
         
-        state = ConnectionState.REQUEST_IN_PROGRESS;
+        // don't even ask if we'll never say yes
+        if (bNotAcceptingMatches)
+            return RC_REQUEST_DENIED;
+        
+        changeState( ConnectionState.REQUEST_IN_PROGRESS );
 
-        boolean willingToPlay = response.requestToInitiateMatch(challenger.getTeamName(), maxNumberOfRounds);
-        if (willingToPlay) {
+        // ask, and if amenable, start the match
+        rc = response.requestToInitiateMatch( challenger.getTeamName(), 
+                                              maxNumberOfRounds);
+        if (rc==RC_OK) {
             this.match = match;
-            state = ConnectionState.MATCH_IN_PLAY;
+            changeState( ConnectionState.MATCH_IN_PLAY );
         } else {
-            state = ConnectionState.AVAILABLE_FOR_PLAY;
-            rc = E_REQUEST_DENIED;
+            // if anything but OK or DENIED: never ask this connection again
+            if (rc!=RC_REQUEST_DENIED)
+                bNotAcceptingMatches = true;
+            // anything but OK: return DENIED
+            changeState( ConnectionState.AVAILABLE_FOR_PLAY );
+            rc = RC_REQUEST_DENIED;
         }
         
         return rc;
     }
     
     @Override
-    public ArrayList<PlayerEntry> getAvailablePlayerList() 
+    public ArrayList<PlayerEntry> getPlayerList() 
             throws RemoteException
     {
         
         return ConnectionTable
                 .getInstance()
-                .getPlayerList(
-                    ConnectionTable.Filter.AVAILABLE, 
-                    this );
+                .getPlayerList( this );
     }
 
     @Override
@@ -147,7 +173,7 @@ public class Connection extends UnicastRemoteObject implements IConnection, Seri
             return null;
         Scorecard score = match.getScorecard(this);
         if (isMatchOver(score))
-            state = ConnectionState.AVAILABLE_FOR_PLAY;
+            changeState( ConnectionState.AVAILABLE_FOR_PLAY );
         return score;
     }
     
@@ -155,6 +181,15 @@ public class Connection extends UnicastRemoteObject implements IConnection, Seri
         return score.roundsPlayed==score.maxRounds 
                 && score.roundsPlayed>0 
                 && state==ConnectionState.MATCH_IN_PLAY;
+    }
+    
+    ConnectionState changeState( ConnectionState newState ) {
+        state = newState;
+        ConnectionTable.getInstance().notifyListeners( 
+                new ListAction( 
+                        ListAction.Action.CHANGE, 
+                        new PlayerEntry(this) ) );
+        return state;
     }
     
     /**
@@ -177,7 +212,7 @@ public class Connection extends UnicastRemoteObject implements IConnection, Seri
         try { 
             rc = response.notifyScore( score );
             if (rc==RC_OK && isMatchOver(score))
-                state = ConnectionState.AVAILABLE_FOR_PLAY;
+                changeState( ConnectionState.AVAILABLE_FOR_PLAY );
         } 
         catch (Exception e) { 
             System.out.println("Server: while pushing score to client: "+e+" g="+score.opponentGesture); 

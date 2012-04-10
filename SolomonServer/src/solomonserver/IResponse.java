@@ -5,7 +5,7 @@ import java.rmi.RemoteException;
 
 public interface IResponse extends Remote {
 
-    boolean requestToInitiateMatch( String teamName, int maxNumberOfRounds ) throws RemoteException;
+    ResultCode requestToInitiateMatch( String teamName, int maxNumberOfRounds ) throws RemoteException;
     
     void abortMatch() throws RemoteException;
     

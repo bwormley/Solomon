@@ -37,6 +37,14 @@ public class Match
         this.maxNumberOfRounds = maxNumberOfRounds;
     }
     
+    Connection getPlayer1() {
+        return player1;
+    }
+    
+    Connection getPlayer2() {
+        return player2;
+    }
+    
     public synchronized Scorecard getScorecard( Connection caller )
     {
         PlayerSelector sel    = whichPlayerCalledUs(caller);

@@ -11,7 +11,7 @@ public class ConnectionTable {
 
     public enum Filter {
         AVAILABLE, /* available for play, excluding me */
-        ALL        /* full table dump */
+        NONE        /* full table dump */
     };
     
     private ConnectionTable()
@@ -117,7 +117,6 @@ public class ConnectionTable {
      * @return 
      */
     public ArrayList<PlayerEntry> getPlayerList( 
-            ConnectionTable.Filter filter,
             Connection inquirer )
     {
         ArrayList<PlayerEntry> list = new ArrayList<PlayerEntry>();
@@ -126,14 +125,8 @@ public class ConnectionTable {
             Map.Entry pair  = (Map.Entry)i.next();
             int id = (Integer)pair.getKey();
             Connection player = (Connection)pair.getValue();
-            if (filter==ConnectionTable.Filter.ALL 
-                    || (filter==ConnectionTable.Filter.AVAILABLE 
-                        && player.getState()==ConnectionState.AVAILABLE_FOR_PLAY
-                        && (inquirer==null || inquirer.getID()!=player.getID())))
-            {
-                PlayerEntry e = new PlayerEntry( player.getTeamName(), player.getOrigin(), id, player.getState() );
-                list.add(e);
-            }
+            PlayerEntry e = new PlayerEntry( player.getTeamName(), player.getOrigin(), id, player.getState() );
+            list.add(e);
         }
         return list;
     }
@@ -151,7 +144,7 @@ public class ConnectionTable {
     void removeListener( IPlayerListListener listener ) {
         listeners.remove(listener);
     }
-    private void notifyListeners( ListAction event ) {
+    public void notifyListeners( ListAction event ) {
         for ( IPlayerListListener listener : listeners )
             try {
                 listener.notifyAction(event);

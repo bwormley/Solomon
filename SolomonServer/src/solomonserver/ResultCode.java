@@ -12,13 +12,13 @@ public enum ResultCode implements Serializable {
     RC_SCISSORS,            /* opponent played SCISSORS in this round */
     RC_MATCH_ENDED,
     RC_CONTINUE,            /* returned by RPS callback, indicating ready to resume game */
+    RC_REQUEST_DENIED,      /* challenged player respectfully denies a request to play a match */
     RC_OK,                  /* successful result */
     E_401,                  /* major problem, completely unexpected. reboot. */
     E_IN_GAME_MODE,         /* next call should be doGesture */
     E_IN_INFO_MODE,         /* next call should be getGesture */
     E_UNRECOGNIZED_PLAYER,  /* unknown or illegal player */
     E_ALREADY_GESTURED,     /* already received a gesture for this round */
-    E_REQUEST_DENIED,       /* challenged player denies request to play a match */
     E_WRONG_STATE,
     E_MATCH_ENDED,
     E_SERVER_NOT_FOUND,
@@ -28,4 +28,7 @@ public enum ResultCode implements Serializable {
     
     /* Client-side codes */
     E_NO_CONNECTION,         /* no established connection with server */
+    E_LOSS_OF_SYNCHRONIZATION,
+    E_REGISTRATION_FAILED,
+    E_SCORE_NOT_AVAILABLE,
 }
