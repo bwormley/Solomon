@@ -17,3 +17,6 @@ solomonClientLib/dependencies/lib/.DS_Store
 SolomonClient/docs/Solomon_Client_Model.uml~
 SolomonServer/docs/Solomon_Server_Model.uml~
 SolomonServer/docs/SolomonServer_FuncSpec.odt
+.DS_Store
+todo.txt~
+todo.txt
