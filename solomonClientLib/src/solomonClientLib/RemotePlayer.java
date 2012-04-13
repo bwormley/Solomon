@@ -185,9 +185,9 @@ public class RemotePlayer
      * @param rc an optional indication to the opponent about the reason for 
      * the abortion
      */
-    public void abortMatch( ResultCode rc ) 
+    public void abortingMatch( ResultCode rc ) 
     {
-        Server.getInstance().abortMatch( rc );
+        Server.getInstance().abortingMatch( rc );
     }
     
     /**
@@ -219,10 +219,10 @@ public class RemotePlayer
     }
 
     @Override
-    public void abortMatch() 
+    public void abortMatch( ResultCode rc ) 
             throws RemoteException {
         if (notify!=null)
-            notify.abortMatch( RC_OK );
+            notify.abortMatch( rc );
     }
 
     @Override

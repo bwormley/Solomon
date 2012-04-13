@@ -162,9 +162,29 @@ public class Connection extends UnicastRemoteObject implements IConnection, Seri
     }
 
     @Override
-    public void abortMatch( ResultCode rc ) throws RemoteException {
+    public void abortingMatch( ResultCode rc ) throws RemoteException {
+        state = ConnectionState.AVAILABLE_FOR_PLAY;
         if (match!=null)
-            match.abortMatch();
+            match.abortMatch( this, rc );
+    }
+    
+
+    /**
+     * called by the Match object, as forwarded from the remote player, this 
+     * function immediately resets the player connection to AVAILABLE, and 
+     * informs the Client of the change in status asynchronously.  The reason 
+     * code is informational only.
+     * 
+     * @param rc remote player's reason for aborting match
+     */
+    void abortMatch( ResultCode rc ) {
+        state = ConnectionState.AVAILABLE_FOR_PLAY;
+        // best effort: if it fails, we've done all we can
+        try {
+            if (response!=null)
+                response.abortMatch( rc );
+        }
+        catch (Exception e) {}
     }
 
     @Override

@@ -7,7 +7,7 @@ public interface IResponse extends Remote {
 
     ResultCode requestToInitiateMatch( String teamName, int maxNumberOfRounds ) throws RemoteException;
     
-    void abortMatch() throws RemoteException;
+    void abortMatch( ResultCode rc ) throws RemoteException;
     
     void abortConnection( ResultCode rc ) throws RemoteException;
     

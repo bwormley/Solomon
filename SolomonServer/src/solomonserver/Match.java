@@ -159,9 +159,16 @@ System.out.printf( " post_state=%s\n", state );
     }
     
 
-    public void abortMatch()
+    public void abortMatch( Connection killjoy, ResultCode rc )
     {
         // TODO abortMatch
+        // TODO perhaps administrative abort match, which needs to inform both players
+        state = State.GAME_OVER;
+        PlayerSelector whichPlayer = whichPlayerCalledUs( killjoy );
+        switch (whichPlayer) {
+            case PLAYER1: player2.abortMatch(rc); break;
+            case PLAYER2: player1.abortMatch(rc); break;
+        }
     }
 
     public int getRoundNumber()

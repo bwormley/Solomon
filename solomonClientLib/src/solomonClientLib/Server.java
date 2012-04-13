@@ -7,9 +7,8 @@ import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.EnumSet;
-import solomonserver.*;
-
 import static solomonserver.ResultCode.*;
+import solomonserver.*;
 
 /**
  * This singleton class encapsulates all synchronous communication to and 
@@ -228,12 +227,12 @@ public class Server  {
         }
     }
     
-    public void abortMatch( ResultCode rc )
+    public void abortingMatch( ResultCode rc )
     {
         try
         {
             if (conn!=null)
-                conn.abortMatch(rc);
+                conn.abortingMatch(rc);
         }
         catch (Exception e)
         {

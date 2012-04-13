@@ -16,7 +16,15 @@ public interface IConnection extends Remote {
     ResultCode doGesture( Gesture g ) 
             throws RemoteException;
     
-    void abortMatch( ResultCode reasonCode ) 
+    /**
+     * called by the Client, signaling the intention of aborting the match.  
+     * The Server will immediately terminate the match, resetting both player 
+     * to AVAILABLE_FOR_PLAY.
+     * 
+     * @param reasonCode
+     * @throws RemoteException 
+     */
+    void abortingMatch( ResultCode reasonCode ) 
             throws RemoteException;
     
     Scorecard getScorecard() 
