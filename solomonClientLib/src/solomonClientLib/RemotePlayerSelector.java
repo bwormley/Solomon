@@ -118,7 +118,7 @@ public class RemotePlayerSelector extends javax.swing.JFrame {
     public PlayerEntry getOpponentPlayer() { return opponentPlayer; }
     private void inviteToPlayButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_inviteToPlayButtonActionPerformed
         int playerID = ((PlayerEntry)playerListbox.getSelectedValue()).id;
-        ResultCode rc = Server.getInstance().requestRemoteMatch(playerID, 20000);
+        ResultCode rc = Server.getInstance().requestRemoteMatch(playerID, Server.getInstance().numberOfRounds);
         if (rc==ResultCode.RC_OK) {
             opponentPlayer = (PlayerEntry)playerListbox.getSelectedValue();
             dispose();

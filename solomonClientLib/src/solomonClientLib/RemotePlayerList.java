@@ -150,14 +150,13 @@ public class RemotePlayerList extends UnicastRemoteObject
         // note: only add if its an AVAILABLE_FOR_PLAY player
         // note: might be a CHANGE to AVAILABLE_FOR_PLAY, which for us means ADD
         else if ((e.event==ListAction.Action.ADD || e.event==ListAction.Action.CHANGE)
-                && e.player.state==ConnectionState.AVAILABLE_FOR_PLAY) {
+                && e.player.state==ConnectionState.AVAILABLE_FOR_PLAY
+                && e.player.id!=Server.getInstance().playerID) {
             list.add(e.player);   
             index = list.size() - 1;
             if (listener!=null) {
-                if (e.event==ListAction.Action.ADD) {
-                    ListDataEvent lde = new ListDataEvent( this, ListDataEvent.INTERVAL_ADDED, index, index );
-                    listener.intervalAdded(lde);
-                }
+                ListDataEvent lde = new ListDataEvent( this, ListDataEvent.INTERVAL_ADDED, index, index );
+                listener.intervalAdded(lde);
             }
         }
         

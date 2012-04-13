@@ -77,6 +77,21 @@ public class RemotePlayer
     }
     
     /**
+     * Set the number of rounds requested for this match.  This will be the 
+     * number of rounds requested when inviting a remote player to a match.
+     * If, instead, this local player accepts an invitation from another 
+     * player, the number of rounds specified by that player will take 
+     * precedence.  So, for the general case, the local player should heed the 
+     * actual number of rounds to play, as shown in each Scorecard record.
+     * 
+     * @param numberOfRounds number of rounds to play, in the invitation 
+     * to a remote player
+     */
+    public void setNumberOfRounds( int numberOfRounds ) {
+        Server.getInstance().setNumberOfRounds(numberOfRounds);
+    }
+    
+    /**
      * Initiate a match with a remote player, requesting a certain number of 
      * rounds of play.
      * 

@@ -23,6 +23,7 @@ public class Server  {
     private static Server _instance = null;
     private IConnection conn = null;
     int playerID = 0;
+    int numberOfRounds;
     
     /**
      * This is the delay for a non-fatal error from the server before 
@@ -96,6 +97,10 @@ public class Server  {
             rc = E_SERVER_NOT_FOUND; 
         }
         return rc;
+    }
+    
+    public void setNumberOfRounds( int numberOfRounds ) {
+        this.numberOfRounds = numberOfRounds;
     }
     
     public ArrayList<PlayerEntry> getAvailablePlayersList()
