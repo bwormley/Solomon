@@ -23,6 +23,7 @@ public class Scorecard implements Serializable {
      * contain one of the follwoing values:
      *     RC_OK - the contained score is valid
      */
+    // TODO enumerate possible codes
     public ResultCode rc;
     
     /**
@@ -54,4 +55,21 @@ public class Scorecard implements Serializable {
      * the number of rounds in this match
      */
     public int maxRounds;
+    
+    /**
+     * convenience function for dumping contents
+     * 
+     * @return human-readable representation
+     */
+    @Override
+    public String toString() {
+        return String.format( "round %d/%d    WIN/LOSS/TIE %d/%d/%d  rc=%s\n",
+            roundsPlayed, 
+            maxRounds,
+            myScore, 
+            opponentScore, 
+            ties,
+            rc );
+    }
+    
 }

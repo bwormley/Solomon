@@ -1,57 +1,51 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package genericclient;
 
 import java.util.Random;
+import solomonClientLib.INotification;
 import solomonClientLib.RemotePlayer;
 import solomonserver.Gesture;
 import solomonserver.ResultCode;
-
-import static solomonserver.ResultCode.*;
-import static solomonserver.Gesture.*;
+import static solomonserver.ResultCode.E_NOT_IMPLEMENTED;
+import static solomonserver.ResultCode.RC_OK;
 import solomonserver.Scorecard;
-import solomonClientLib.INotification;
 
 /**
  * This is an ultra simple, minimalist implementation of an RPS client of 
- * Solomon Server.  Except for being able to accept a remote match request, this
- * client can play an automated match with a remote player.
+ * Solomon Server.  Except for not being able to accept a remote match request, 
+ * this client can play an automated match with a remote player.
  * 
  * The team name for this client is taken from the first argument in the 
- * command line.
+ * command line.  The second argument is the number of rounds to play.
  *
  * @author R Brett Wormley
  */
 public class GenericClient implements INotification {
 
-    /**
-     * @param args the command line arguments
-     */
-    public static void main(String[] args) throws InterruptedException {
+    public static void main(String[] args) 
+            throws InterruptedException {
         GenericClient gc = new GenericClient();
         gc.run(args);
     }
     
-    private void run(String[] args) throws InterruptedException {
+    private void run(String[] args) 
+            throws InterruptedException {
         int numberOfRounds = Integer.parseInt(args[1]);
         ResultCode rc;
         Scorecard score;
         boolean bDone = false;
         
         // get the remote player object
-        RemotePlayer fred = RemotePlayer.getInstance();
+        RemotePlayer remote = RemotePlayer.getInstance();
         
         // register with the server
-        rc = fred.register( args[0], this );
+        rc = remote.register( args[0], this );
         if (rc!=RC_OK) {
             System.out.println( "Failed to register: " + rc );
             System.exit(1);
         }
         
         // request/start a match
-        rc = fred.startMatch( numberOfRounds );
+        rc = remote.startMatch( numberOfRounds );
         if (rc!=RC_OK) {
             System.out.println( "Failed to start match: " + rc );
             System.exit(1);
@@ -59,27 +53,18 @@ public class GenericClient implements INotification {
         
         // play rounds until finished
         do {
-            rc = fred.doGesture(newG());
-            score = fred.getScore();
+            rc = remote.doGesture( newGesture() );
+            score = remote.getScore();
             if (score!=null) {
-                System.out.printf( "GenericClient.%s:     round %d/%d    WIN/LOSS/TIE %d/%d/%d  rc=%s\n",
-                    args[0],
-                    score.roundsPlayed, 
-                    score.maxRounds,
-                    score.myScore, 
-                    score.opponentScore, 
-                    score.ties,
-                    score.rc );
-                 bDone = score.roundsPlayed>0 && score.roundsPlayed>=score.maxRounds;
+                System.out.println( score );
+                bDone = score.roundsPlayed>=score.maxRounds;
             }
-//             Thread.sleep(100);
-
         } while (!bDone);
     }
     
-    private Random rand = new Random();
-            
-    private Gesture newG() {
+    
+    private Gesture newGesture() {
+        final Random rand = new Random();
         switch (rand.nextInt(3)) {
             case 0: return Gesture.ROCK;
             case 1: return Gesture.PAPER; 
@@ -87,6 +72,7 @@ public class GenericClient implements INotification {
         return Gesture.SCISSORS;
     }
 
+    
     /* **************************************
      * INotification INTERFACE IMPLEMENTATION
      * ************************************** */

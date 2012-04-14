@@ -14,6 +14,11 @@ public class ConnectionTable {
         NONE        /* full table dump */
     };
     
+    /**
+     * Maximum number of connections before the server declines requests
+     */
+    static final int MAX_CONNECTIONS = 32;
+    
     private ConnectionTable()
     {
         table = new HashMap<Integer,Connection>();
@@ -61,6 +66,10 @@ public class ConnectionTable {
             removePlayer( duplicatePlayer );
         }
         
+        // decline if we are at maximum utilization
+        if (table.size()>MAX_CONNECTIONS)
+            return null;
+        
         // now add in the new guy
         table.put(player.getID(),player);
         notifyListeners( new ListAction( ListAction.Action.ADD, new PlayerEntry(player)) );
@@ -69,7 +78,6 @@ public class ConnectionTable {
                 + ", player list size is now " 
                 + table.size() );
         return (IConnection)player;
-        // TODO: implememt max connection table size
         // TODO: implement logging
     }
     

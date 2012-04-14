@@ -180,7 +180,7 @@ public class RemotePlayer
      * Cause the match to end prematurely.  (A match automatically ends once 
      * all the rounds have been played).  The opponent player is notified. 
      * After this call, the local player may enter into another match with 
-     * any player.
+     * any player.  Both players statuses are immediately reset to AVAILABLE.
      * 
      * @param rc an optional indication to the opponent about the reason for 
      * the abortion

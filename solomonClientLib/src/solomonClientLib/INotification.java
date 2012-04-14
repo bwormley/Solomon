@@ -73,7 +73,8 @@ public interface INotification {
 
     /**
      * This method is called by the Server to indicate an abnormal termination 
-     * of the match.  This is an advisory call.
+     * of the match, probably due to the remote player's request.  This is an 
+     * advisory call.
      * 
      * @param rc A ResultCode may be sent to indicate a reason for the 
      * termination.  This is merely advisory.

@@ -161,7 +161,7 @@ System.out.printf( " post_state=%s\n", state );
 
     public void abortMatch( Connection killjoy, ResultCode rc )
     {
-        // TODO abortMatch
+        // TODO TEST abortMatch
         // TODO perhaps administrative abort match, which needs to inform both players
         state = State.GAME_OVER;
         PlayerSelector whichPlayer = whichPlayerCalledUs( killjoy );
