@@ -3,6 +3,7 @@ package solomonClientLib;
 
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.concurrent.Semaphore;
 import solomonserver.*;
 import static solomonserver.ResultCode.*;
 
@@ -24,7 +25,8 @@ public class RemotePlayer
      * 
      * @throws RemoteException 
      */
-    private RemotePlayer() throws RemoteException {}
+    private RemotePlayer() throws RemoteException {
+    }
 
     /**
      * The singleton instantiation of this class
@@ -49,7 +51,7 @@ public class RemotePlayer
             }
             catch (Exception e)
             {
-                System.out.println( "Caught exception in solomonclientlib.Player  constructor: "+e);
+                System.out.println( "Caught exception in solomonclientlib.Player constructor: "+e);
             }
         }
         return _instance; 
@@ -70,6 +72,7 @@ public class RemotePlayer
     public ResultCode register( String teamName, INotification notify ) 
     { 
         ResultCode rc;
+        this.teamName = teamName;
         rc = Server.getInstance().register( teamName, (IResponse)this );
         if (rc==RC_OK)
             this.notify = notify;
@@ -79,16 +82,20 @@ public class RemotePlayer
     /**
      * Set the number of rounds requested for this match.  This will be the 
      * number of rounds requested when inviting a remote player to a match.
-     * If, instead, this local player accepts an invitation from another 
+     * If,instead, this local player accepts an invitation from another 
      * player, the number of rounds specified by that player will take 
      * precedence.  So, for the general case, the local player should heed the 
      * actual number of rounds to play, as shown in each Scorecard record.
      * 
+     * Typically, this method is used when it is inconvenient for the client 
+     * to access the number of rounds when calling the startMatch() method.
+     * 
      * @param numberOfRounds number of rounds to play, in the invitation 
      * to a remote player
      */
-    public void setNumberOfRounds( int numberOfRounds ) {
-        Server.getInstance().setNumberOfRounds(numberOfRounds);
+    private int numberOfRounds = 256;
+    public void setNumberOfRounds( int numberOfRoundsRequested ) {
+        numberOfRounds = numberOfRoundsRequested;
     }
     
     /**
@@ -102,11 +109,30 @@ public class RemotePlayer
      * accepts the challenge, the match begins.  This is all transparent to 
      * the caller of this method.
      * 
-     * @param numberOfRounds 1 or more rounds to play for this match
+     * @param numberOfRounds one or more rounds to play for this match.  If less 
+     * than one, then the number of rounds specified in setNumberOfRounds() 
+     * is used.  See that method description for the meaning of 
+     * 'number of rounds.'  If less than one, and no value was set using 
+     * setNumberOfRounds(), the number of rounds defaults to 256.
+     * 
      * @return 
      */
-    public ResultCode startMatch( int numberOfRounds ) 
+    private Semaphore startingMatch;
+    private RemotePlayerSelector rpSel;
+    private GameStatus gameStatus;
+    private String teamName = "UNKNOWN LOCAL";
+    public ResultCode startMatch( int numberOfRoundsRequested ) 
     { 
+        
+        // we'll use the number of rounds passed in here.  But if it isn't 
+        // known (but was passed in previously), use that instead.  
+        if (numberOfRoundsRequested>0) {
+            numberOfRounds = numberOfRoundsRequested;
+        }
+        
+        // give this to server object as an advisory value
+        Server.getInstance().setNumberOfRounds(numberOfRounds);
+        
         // or block, waiting for an invitation
         // or list of available players dialog also shows current request
         
@@ -120,15 +146,36 @@ public class RemotePlayer
         // 2) capture callback, accept match request
         // problem: how to do thread synchronization
         
-        String[] args = new String[0];
-        RemotePlayerSelector rpSel = new RemotePlayerSelector();
-        RemotePlayerSelector.main( args );
+        startingMatch = new Semaphore(1,true);
+        startingMatch.drainPermits();
+        rpSel = new RemotePlayerSelector(startingMatch);
+        
+        // run the selector dialog with default L&F
+        java.awt.EventQueue.invokeLater(new Runnable() {
+            public void run() {
+                rpSel.setVisible(true);
+            }
+        });
+        
+        // block until match starts
+        try {
+           startingMatch.acquire();
+        } catch ( InterruptedException e) {
+        }
+
         PlayerEntry opponentPlayer = rpSel.getOpponentPlayer();
         if (opponentPlayer!=null)
             opponentName = opponentPlayer.teamName;
         
-        GameStatus.main(args);
-        
+        // match in play: fire up the score box
+        gameStatus = new GameStatus( teamName, opponentName, numberOfRounds );
+        // run the selector dialog with default L&F
+        java.awt.EventQueue.invokeLater(new Runnable() {
+            public void run() {
+                gameStatus.setVisible(true);
+            }
+        });
+                
         return RC_OK; 
     }
     
@@ -171,7 +218,14 @@ public class RemotePlayer
      */
     public Scorecard getScore() 
     { 
-        return Server.getInstance().getScore();
+        Scorecard score = Server.getInstance().getScore();
+        if (score!=null)
+            gameStatus.updateProgress(
+                    score.roundsPlayed,
+                    score.myScore,
+                    score.ties,
+                    score.opponentScore );
+        return score;
     }
     
     /**

@@ -16,6 +16,14 @@ public class GameStatus extends javax.swing.JFrame {
     public GameStatus() {
         initComponents();
     }
+    
+    public GameStatus( String myName, String opponentName, int maxNumberOfRounds ) {
+        initComponents();
+        jMatchLabel.setText( String.format( "%s vs %s", myName, opponentName) );
+        jMatchProgressBar.setMinimum(0);
+        jMatchProgressBar.setMaximum(maxNumberOfRounds);
+        this.maxNumberOfRounds = maxNumberOfRounds;
+    }
 
     /**
      * This method is called from within the constructor to initialize the form.
@@ -27,22 +35,25 @@ public class GameStatus extends javax.swing.JFrame {
     private void initComponents() {
 
         jLabel4 = new javax.swing.JLabel();
-        jProgressBar1 = new javax.swing.JProgressBar();
+        jMatchProgressBar = new javax.swing.JProgressBar();
         jLabel1 = new javax.swing.JLabel();
         jProgressBar2 = new javax.swing.JProgressBar();
         jLabel2 = new javax.swing.JLabel();
-        jLabel3 = new javax.swing.JLabel();
+        jMatchLabel = new javax.swing.JLabel();
         jButton1 = new javax.swing.JButton();
 
         jLabel4.setText("jLabel4");
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
+        jMatchProgressBar.setStringPainted(true);
+
         jLabel1.setText("Match progress");
 
         jLabel2.setText("Running Score");
 
-        jLabel3.setText("Match between LOCAL AI and REMOTE");
+        jMatchLabel.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        jMatchLabel.setText("Match between LOCAL AI and REMOTE");
 
         jButton1.setText("Cancel");
 
@@ -55,13 +66,13 @@ public class GameStatus extends javax.swing.JFrame {
                 .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
                     .add(jLabel2)
                     .add(jLabel1)
-                    .add(jLabel3, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 429, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                    .add(jMatchLabel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 429, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
                 .addContainerGap(27, Short.MAX_VALUE))
             .add(org.jdesktop.layout.GroupLayout.TRAILING, layout.createSequentialGroup()
                 .add(0, 0, Short.MAX_VALUE)
                 .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
                     .add(org.jdesktop.layout.GroupLayout.TRAILING, jProgressBar2, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 401, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                    .add(org.jdesktop.layout.GroupLayout.TRAILING, jProgressBar1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 398, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                    .add(org.jdesktop.layout.GroupLayout.TRAILING, jMatchProgressBar, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 398, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
                 .add(19, 19, 19))
             .add(org.jdesktop.layout.GroupLayout.TRAILING, layout.createSequentialGroup()
                 .addContainerGap(org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
@@ -72,11 +83,11 @@ public class GameStatus extends javax.swing.JFrame {
             layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
             .add(org.jdesktop.layout.GroupLayout.TRAILING, layout.createSequentialGroup()
                 .add(19, 19, 19)
-                .add(jLabel3)
+                .add(jMatchLabel)
                 .add(36, 36, 36)
                 .add(jLabel1)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.UNRELATED)
-                .add(jProgressBar1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .add(jMatchProgressBar, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                 .add(18, 18, 18)
                 .add(jLabel2)
                 .add(18, 18, 18)
@@ -85,6 +96,8 @@ public class GameStatus extends javax.swing.JFrame {
                 .add(jButton1)
                 .add(17, 17, 17))
         );
+
+        jMatchProgressBar.getAccessibleContext().setAccessibleParent(null);
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
@@ -134,9 +147,26 @@ public class GameStatus extends javax.swing.JFrame {
     private javax.swing.JButton jButton1;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
-    private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
-    private javax.swing.JProgressBar jProgressBar1;
+    private javax.swing.JLabel jMatchLabel;
+    private javax.swing.JProgressBar jMatchProgressBar;
     private javax.swing.JProgressBar jProgressBar2;
     // End of variables declaration//GEN-END:variables
+
+
+    /**
+     * update status
+     * 
+     * @param rounds number of rounds played
+     */
+    private int maxNumberOfRounds;
+    public void updateProgress( int rounds, int wins, int ties, int losses  ) {
+        jMatchProgressBar.setString(
+                String.format(
+                    "Round %s of %s    (%2.0f%%)",
+                    rounds,
+                    maxNumberOfRounds,
+                    ((rounds*1.0)/(maxNumberOfRounds*1.0))*100.0 ) );
+        this.jMatchProgressBar.setValue( rounds );
+    }
 }

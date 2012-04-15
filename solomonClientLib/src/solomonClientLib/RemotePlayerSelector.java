@@ -4,6 +4,7 @@
  */
 package solomonClientLib;
 
+import java.util.concurrent.Semaphore;
 import javax.swing.ListModel;
 import solomonserver.PlayerEntry;
 import solomonserver.ResultCode;
@@ -14,10 +15,17 @@ import solomonserver.ResultCode;
  */
 public class RemotePlayerSelector extends javax.swing.JFrame {
 
+    Semaphore startingMatch;
+    
     /**
      * Creates new form RemotePlayerSelector
      */
+    public RemotePlayerSelector( Semaphore startingMatch ) {
+        this.startingMatch = startingMatch;
+        initComponents();
+    }
     public RemotePlayerSelector() {
+        this.startingMatch = new Semaphore(1,true);
         initComponents();
     }
     
@@ -117,11 +125,14 @@ public class RemotePlayerSelector extends javax.swing.JFrame {
     public static PlayerEntry opponentPlayer;
     public PlayerEntry getOpponentPlayer() { return opponentPlayer; }
     private void inviteToPlayButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_inviteToPlayButtonActionPerformed
-        int playerID = ((PlayerEntry)playerListbox.getSelectedValue()).id;
+        PlayerEntry invitee = (PlayerEntry)playerListbox.getSelectedValue();
+        int playerID = invitee.id;
         ResultCode rc = Server.getInstance().requestRemoteMatch(playerID, Server.getInstance().numberOfRounds);
         if (rc==ResultCode.RC_OK) {
-            opponentPlayer = (PlayerEntry)playerListbox.getSelectedValue();
-            dispose();
+            opponentPlayer = invitee;
+            setVisible(false);
+            startingMatch.release();
+            //dispose();
         }
     }//GEN-LAST:event_inviteToPlayButtonActionPerformed
 
