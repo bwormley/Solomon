@@ -4,6 +4,11 @@
  */
 package solomonClientLib;
 
+import java.awt.Color;
+import java.awt.Graphics2D;
+import java.awt.Shape;
+import java.awt.geom.Rectangle2D;
+
 /**
  *
  * @author bwormley
@@ -37,10 +42,11 @@ public class GameStatus extends javax.swing.JFrame {
         jLabel4 = new javax.swing.JLabel();
         jMatchProgressBar = new javax.swing.JProgressBar();
         jLabel1 = new javax.swing.JLabel();
-        jProgressBar2 = new javax.swing.JProgressBar();
         jLabel2 = new javax.swing.JLabel();
         jMatchLabel = new javax.swing.JLabel();
-        jButton1 = new javax.swing.JButton();
+        jAbort = new javax.swing.JButton();
+        jScorePanel = new javax.swing.JPanel();
+        jScoreText = new javax.swing.JLabel();
 
         jLabel4.setText("jLabel4");
 
@@ -52,55 +58,90 @@ public class GameStatus extends javax.swing.JFrame {
 
         jLabel2.setText("Running Score");
 
+        jMatchLabel.setFont(new java.awt.Font("Lucida Grande", 0, 18)); // NOI18N
         jMatchLabel.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         jMatchLabel.setText("Match between LOCAL AI and REMOTE");
 
-        jButton1.setText("Cancel");
+        jAbort.setText("Cancel");
+        jAbort.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jAbortActionPerformed(evt);
+            }
+        });
+
+        jScorePanel.setBorder(new javax.swing.border.SoftBevelBorder(javax.swing.border.BevelBorder.RAISED));
+
+        jScoreText.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        jScoreText.setText("score text");
+
+        org.jdesktop.layout.GroupLayout jScorePanelLayout = new org.jdesktop.layout.GroupLayout(jScorePanel);
+        jScorePanel.setLayout(jScorePanelLayout);
+        jScorePanelLayout.setHorizontalGroup(
+            jScorePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(jScorePanelLayout.createSequentialGroup()
+                .addContainerGap()
+                .add(jScoreText, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 387, Short.MAX_VALUE)
+                .addContainerGap())
+        );
+        jScorePanelLayout.setVerticalGroup(
+            jScorePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(jScorePanelLayout.createSequentialGroup()
+                .add(14, 14, 14)
+                .add(jScoreText)
+                .addContainerGap(15, Short.MAX_VALUE))
+        );
 
         org.jdesktop.layout.GroupLayout layout = new org.jdesktop.layout.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
             .add(layout.createSequentialGroup()
-                .add(23, 23, 23)
-                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                    .add(jLabel2)
-                    .add(jLabel1)
-                    .add(jMatchLabel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 429, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(27, Short.MAX_VALUE))
-            .add(org.jdesktop.layout.GroupLayout.TRAILING, layout.createSequentialGroup()
-                .add(0, 0, Short.MAX_VALUE)
-                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                    .add(org.jdesktop.layout.GroupLayout.TRAILING, jProgressBar2, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 401, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                    .add(org.jdesktop.layout.GroupLayout.TRAILING, jMatchProgressBar, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 398, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                .add(19, 19, 19))
-            .add(org.jdesktop.layout.GroupLayout.TRAILING, layout.createSequentialGroup()
-                .addContainerGap(org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .add(jButton1)
-                .addContainerGap())
+                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING)
+                    .add(jAbort)
+                    .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                        .add(layout.createSequentialGroup()
+                            .add(20, 20, 20)
+                            .add(jMatchLabel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 429, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                        .add(layout.createSequentialGroup()
+                            .add(20, 20, 20)
+                            .add(jLabel1))
+                        .add(layout.createSequentialGroup()
+                            .add(54, 54, 54)
+                            .add(jMatchProgressBar, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 398, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                        .add(layout.createSequentialGroup()
+                            .add(23, 23, 23)
+                            .add(jLabel2))
+                        .add(layout.createSequentialGroup()
+                            .add(50, 50, 50)
+                            .add(jScorePanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))))
+                .add(20, 20, 20))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(org.jdesktop.layout.GroupLayout.TRAILING, layout.createSequentialGroup()
-                .add(19, 19, 19)
+            .add(layout.createSequentialGroup()
+                .add(10, 10, 10)
                 .add(jMatchLabel)
-                .add(36, 36, 36)
-                .add(jLabel1)
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.UNRELATED)
+                .add(18, 18, 18)
+                .add(jLabel1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .add(5, 5, 5)
                 .add(jMatchProgressBar, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                .add(18, 18, 18)
+                .add(12, 12, 12)
                 .add(jLabel2)
-                .add(18, 18, 18)
-                .add(jProgressBar2, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED, 36, Short.MAX_VALUE)
-                .add(jButton1)
-                .add(17, 17, 17))
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(jScorePanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .add(23, 23, 23)
+                .add(jAbort)
+                .addContainerGap(15, Short.MAX_VALUE))
         );
 
         jMatchProgressBar.getAccessibleContext().setAccessibleParent(null);
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
+
+    private void jAbortActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jAbortActionPerformed
+        this.dispose();
+    }//GEN-LAST:event_jAbortActionPerformed
 
     /**
      * @param args the command line arguments
@@ -144,13 +185,14 @@ public class GameStatus extends javax.swing.JFrame {
         });
     }
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JButton jButton1;
+    private javax.swing.JButton jAbort;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel4;
     private javax.swing.JLabel jMatchLabel;
     private javax.swing.JProgressBar jMatchProgressBar;
-    private javax.swing.JProgressBar jProgressBar2;
+    private javax.swing.JPanel jScorePanel;
+    private javax.swing.JLabel jScoreText;
     // End of variables declaration//GEN-END:variables
 
 
@@ -161,6 +203,8 @@ public class GameStatus extends javax.swing.JFrame {
      */
     private int maxNumberOfRounds;
     public void updateProgress( int rounds, int wins, int ties, int losses  ) {
+        
+        // update progress bar
         jMatchProgressBar.setString(
                 String.format(
                     "Round %s of %s    (%2.0f%%)",
@@ -168,5 +212,23 @@ public class GameStatus extends javax.swing.JFrame {
                     maxNumberOfRounds,
                     ((rounds*1.0)/(maxNumberOfRounds*1.0))*100.0 ) );
         this.jMatchProgressBar.setValue( rounds );
+        
+        // update score bar
+        int width  = jScorePanel.getWidth();
+        int height = jScorePanel.getHeight();
+        int myWinningWidth       = (int)((wins*1.0)/(rounds*1.0)*width);
+        int opponentWinningWidth = (int)((losses*1.0)/(rounds*1.0)*width);
+        Graphics2D gcx = (Graphics2D)jScorePanel.getGraphics();
+        gcx.setColor(Color.YELLOW);
+        gcx.fillRect( 0, 0, width, height );
+        if (myWinningWidth>0) {
+            gcx.setColor(Color.GREEN);
+            gcx.fillRect( 0, 0, myWinningWidth, height );
+        }
+        if (opponentWinningWidth>0) {
+            gcx.setColor(Color.RED);
+            gcx.fillRect( width-opponentWinningWidth, 0, opponentWinningWidth, height );
+        }
+        jScoreText.setText( String.format( "%d Wins   %d Ties   %d Losses", wins, ties, losses ) );
     }
 }
