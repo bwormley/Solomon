@@ -5,9 +5,12 @@ import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import static solomonserver.ResultCode.*;
 
 public class Connection extends UnicastRemoteObject implements IConnection, Serializable {
+    private static final Logger l = Logger.getLogger("com.cs151.solomon.server");
     
     private String teamName = null;
     private String origin = null;
@@ -17,10 +20,12 @@ public class Connection extends UnicastRemoteObject implements IConnection, Seri
     private boolean bNotAcceptingMatches = false;
 
     private ConnectionState state = ConnectionState.DISCONNECTED;
+    
         
     public Connection( String teamName, IResponse response, String origin )
             throws RemoteException
     {
+        l.entering("Connection","Constructor",teamName);
         this.teamName = teamName;
         this.response = response;
         this.origin   = origin;
@@ -74,6 +79,7 @@ public class Connection extends UnicastRemoteObject implements IConnection, Seri
     public ResultCode requestRemoteMatch( int playerID, int maxNumberOfRounds ) 
             throws RemoteException 
     {
+        l.entering("Connection","requestRemoteMatch",playerID);
         ResultCode rc = RC_OK;
         
         if (state!=ConnectionState.AVAILABLE_FOR_PLAY)
@@ -81,12 +87,10 @@ public class Connection extends UnicastRemoteObject implements IConnection, Seri
         
         changeState( ConnectionState.REQUEST_IN_PROGRESS );
         
-        System.out.println("Server: Connection.requestRemoteMatch() entry");
-
         Connection player2 = ConnectionTable.getInstance().getPlayer( playerID );
         if (player2==null) {
             changeState( ConnectionState.AVAILABLE_FOR_PLAY );
-            System.out.printf( "Server: Connection.requestRemoteMatch(): player not found (ID=%08x)\n", playerID);
+            l.log(Level.WARNING,"match requested, but opponent not in table",playerID);
             rc = E_UNRECOGNIZED_PLAYER;
         }
             
@@ -97,13 +101,14 @@ public class Connection extends UnicastRemoteObject implements IConnection, Seri
             match = new Match( this, player2, maxNumberOfRounds );
             rc = player2.requestMatch( this, match, maxNumberOfRounds );
             if (rc==RC_OK) {
-                System.out.printf( "Server: BEGIN match between %s and %s\n", this.getTeamName(), player2.getTeamName() );
                 MatchTable.getInstance().addMatch(match);
                 changeState( ConnectionState.MATCH_IN_PLAY );
+                l.log(Level.INFO,"BEGIN match between {0} and {1}",new Object[] {this,player2});
             }
             else {
                 match = null;
                 changeState( ConnectionState.AVAILABLE_FOR_PLAY );
+                l.log(Level.INFO,"REFUSED match between {0} and {1}",new Object[] {this,player2});
             }
         }
         return rc;
@@ -227,17 +232,18 @@ public class Connection extends UnicastRemoteObject implements IConnection, Seri
      */
     public boolean notifyScore( Scorecard score )
     {
-        ResultCode rc = ResultCode.RC_CONTINUE;
-        // TODO: handle this catch
+        ResultCode rc = RC_CONTINUE;
         try { 
             rc = response.notifyScore( score );
+        } 
+        catch (Exception e) {
+            l.log(Level.WARNING,"error pushing score",e);
+        }
+        finally {
             if (rc==RC_OK && isMatchOver(score))
                 changeState( ConnectionState.AVAILABLE_FOR_PLAY );
-        } 
-        catch (Exception e) { 
-            System.out.println("Server: while pushing score to client: "+e+" g="+score.opponentGesture); 
         }
-        return (rc == ResultCode.RC_OK) ;
+        return (rc==RC_OK);
     }
 
     @Override
@@ -250,5 +256,10 @@ public class Connection extends UnicastRemoteObject implements IConnection, Seri
     public void removePlayerListListener(IPlayerListListener listener) 
             throws RemoteException {
         ConnectionTable.getInstance().removeListener(listener);
+    }
+    
+    @Override
+    public String toString() {
+        return String.format( "%s@%s %08x %s", teamName, origin, getID(), state );
     }
 }

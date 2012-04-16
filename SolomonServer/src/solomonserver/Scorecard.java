@@ -27,6 +27,11 @@ public class Scorecard implements Serializable {
     public ResultCode rc;
     
     /**
+     * the gesture I made for this round
+     */
+    public Gesture myGesture;
+    
+    /**
      * the gesture made by the opposing player
      */
     public Gesture opponentGesture;
@@ -63,9 +68,11 @@ public class Scorecard implements Serializable {
      */
     @Override
     public String toString() {
-        return String.format( "round %d/%d    WIN/LOSS/TIE %d/%d/%d  rc=%s\n",
+        return String.format( "round %d/%d    %s,%s   WIN/LOSS/TIE %d/%d/%d  rc=%s\n",
             roundsPlayed, 
             maxRounds,
+            this.myGesture,
+            this.opponentGesture,
             myScore, 
             opponentScore, 
             ties,

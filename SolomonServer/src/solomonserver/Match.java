@@ -1,10 +1,14 @@
 package solomonserver;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import static solomonserver.Gesture.*;
 import static solomonserver.ResultCode.*;
 
 public class Match
 { 
+    final private static Logger l = Logger.getLogger("com.cs151.solomon.server");
+    
     private Connection player1 = null;
     private Connection player2 = null;
     
@@ -47,6 +51,8 @@ public class Match
     
     public synchronized Scorecard getScorecard( Connection caller )
     {
+        l.entering( "Match","getScorecard");
+        
         PlayerSelector sel    = whichPlayerCalledUs(caller);
         ResultCode     rc     = RC_OK;
         Scorecard      score  = null;
@@ -57,7 +63,6 @@ public class Match
             case PLAYER1: event = EventType.P1_QUERY;  break;
             case PLAYER2: event = EventType.P2_QUERY;  break;
         }
-System.out.printf( "Server.Match.%s getScorecard() pre_state=%s event=%s ", caller.getTeamName(), state, event );
         switch (state) 
         {
             case BEGIN_ROUND:   rc = stBeginRound(   event, NONE ); break;
@@ -69,20 +74,11 @@ System.out.printf( "Server.Match.%s getScorecard() pre_state=%s event=%s ", call
             case BOTH_INFORMED: rc = stBothInformed( event, NONE ); break;
             case GAME_OVER:     rc = stGameOver(     event, NONE ); break;
         }
-        // if score requested, and in correct state (ie, no error) return r/p/s
-//        if (rc==RC_OK)
-//        {
-//            switch (state) {
-//                case BOTH_GESTURED:
-//                case P1_INFORMED:
-//                case P2_INFORMED:
-//                case BOTH_INFORMED:
-                    score = makeScorecard( caller );
-//                    break;
-//            }
-//        }
+        score = makeScorecard( caller );
         score.rc = rc;
-System.out.printf( " post_state=%s\n", state );
+        
+        if (rc==RC_OK)
+            l.log(Level.FINE,"productive scorecard {0}",score);
         return score;
     }
     
@@ -104,6 +100,8 @@ System.out.printf( " post_state=%s\n", state );
     
     public synchronized ResultCode doGesture( Connection caller, Gesture g )
     {
+        l.entering("Match","doGesture");
+        
         State previousState   = state;
         PlayerSelector sel    = whichPlayerCalledUs(caller);
         ResultCode     rc     = RC_OK;
@@ -113,7 +111,6 @@ System.out.printf( " post_state=%s\n", state );
             case PLAYER1: event = EventType.P1_GESTURES;  break;
             case PLAYER2: event = EventType.P2_GESTURES;  break;
         }
-        System.out.printf( "%s.doGesture(%s) %s\n", caller.getTeamName(), g, state );
         switch (state) 
         {
             case BEGIN_ROUND:   rc = stBeginRound(   event, g ); break;
@@ -155,12 +152,17 @@ System.out.printf( " post_state=%s\n", state );
                 state = State.BOTH_INFORMED;
         }
         
+        if (rc==RC_OK) 
+            l.log(Level.FINE,"productive doGesture");
+
         return rc;
     }
     
 
     public void abortMatch( Connection killjoy, ResultCode rc )
     {
+        l.entering("Match","abortMatch");
+
         // TODO TEST abortMatch
         // TODO perhaps administrative abort match, which needs to inform both players
         state = State.GAME_OVER;
@@ -188,12 +190,14 @@ System.out.printf( " post_state=%s\n", state );
         {
             score.myScore         = player1Score;
             score.opponentScore   = player2Score;
+            score.myGesture       = player1Gesture;
             score.opponentGesture = player2Gesture;
         }
         else if (sel==PlayerSelector.PLAYER2)
         {
             score.myScore         = player2Score;
-            score.opponentScore   = player1Score;            
+            score.opponentScore   = player1Score;
+            score.myGesture       = player2Gesture;
             score.opponentGesture = player1Gesture;
         }
         else
@@ -248,7 +252,7 @@ System.out.printf( " post_state=%s\n", state );
     {
         ResultCode rc = RC_OK;
         switch (action) {
-            case P1_GESTURES:  player2Gesture = g; state = State.BOTH_GESTURED; round++; break;
+            case P1_GESTURES:  player1Gesture = g; state = State.BOTH_GESTURED; round++; break;
             case P2_GESTURES:  rc = E_ALREADY_GESTURED; break;
             case P1_QUERY:
             case P2_QUERY:     rc = E_IN_GAME_MODE; break;

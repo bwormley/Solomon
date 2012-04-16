@@ -1,12 +1,17 @@
 package solomonserver;
 
+import java.io.IOException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
-import java.util.ArrayList;
+import java.util.logging.ConsoleHandler;
+import java.util.logging.FileHandler;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class Registrar extends UnicastRemoteObject implements IRegistrar {
+    final private static Logger l = Logger.getLogger("com.cs151.solomon.server");
     
     /**
      * A simple string to challenge anyone calling an administrative interface
@@ -27,8 +32,19 @@ public class Registrar extends UnicastRemoteObject implements IRegistrar {
      * 
      * @throws RemoteException 
      */
-    private void startServer() throws RemoteException 
+    private void startServer() throws RemoteException, IOException 
     {
+        FileHandler fh = new FileHandler("solomon.log",false);
+        fh.setLevel(Level.FINE);
+        Logger.getLogger("com.cs151.solomon.server").addHandler(fh);
+        
+        ConsoleHandler ch = new ConsoleHandler();
+        ch.setLevel(Level.FINE);
+        Logger.getLogger("con.cs151.solomon.server").addHandler(ch);
+        
+        Logger.getLogger("com.cs151.solomon.server").setLevel(Level.FINE);
+        
+        l.entering("Registrar","startServer");
         
         // TODO: if not running, programmatically start RMIRegistry with 
         // java.rmi.registry.LocateRegistry.createRegistry()
@@ -40,7 +56,6 @@ public class Registrar extends UnicastRemoteObject implements IRegistrar {
             System.out.println( "Server: problem directing error log: " + e);
         }
 */
-        // start logger
         
         // register this server object in RMI registry
         try {
@@ -51,31 +66,29 @@ public class Registrar extends UnicastRemoteObject implements IRegistrar {
 //                System.out.println( "Server: informational (ignored): "+e);
 //            }
             
-            System.out.println("Server: UNexporting Registrar");
             try {
                 UnicastRemoteObject.unexportObject(this, true);
             } catch (Exception e) {
-                System.out.println( "Server: informational (ignored): "+e);
+                l.log(Level.WARNING,"error unexporting previous Registrar object",e);
             }
             
-            System.out.println("SOLOMON SERVER 0.9.0\nServer: exporting Registrar");
             IRegistrar stub = (IRegistrar)UnicastRemoteObject.exportObject(registrar,0);
             
-            
-            System.out.println("Server: locating registry");
+            l.log(Level.CONFIG,"locating registry");
             Registry registry = LocateRegistry.getRegistry();
             
-            System.out.println( "Server: UNbinding previous registrar");
+            l.log(Level.INFO,"UNbinding previous registrar");
             try { registry.unbind("Registrar"); } catch (Exception e) {}
             
-            System.out.println("Server: binding IRegistrar");
+            l.log(Level.INFO,"binding IRegistrar");
             registry.bind("Registrar",stub); 
             // TODO: make this global string
             // TOD: rebind?
             
-            System.out.println( "Server: Registrar is up");
+            l.log(Level.INFO,"Solomon Registrar v0.9.0 is up");
+            
         } catch (Exception e) {
-            System.out.println("Server: " +e);
+            l.log(Level.SEVERE,"fatal error during initialization",e);
         }
     }
     
@@ -113,21 +126,25 @@ public class Registrar extends UnicastRemoteObject implements IRegistrar {
     public IConnection register( String teamName, IResponse response ) 
             throws RemoteException 
     {
+        l.entering("Registrar","register",teamName);
+        
         String origin = "";
         try {
             origin = Registrar.getClientHost();
 //            Registrar.setLog(System.out);
         } catch (Exception e) {
-            System.out.println( "Server: problem getting client identity: " + e);
+            l.log(Level.SEVERE,"error getting client host address",e);
+            return null;
         }
 
-        System.out.println( "Server: registering team '" + teamName + "' client at " + origin ); 
         
         Connection conn = new Connection( teamName, response, origin );
+        l.log(Level.INFO,"registered",conn);
+        
+        // TODO fail here if ConnTable full
         ConnectionTable.getInstance().addPlayer(conn);
-        IConnection rc  = (IConnection) conn;
-        System.out.println("Server: Registrar.register() preparing to return IConnection " + rc.getClass() );
-        return rc;
+        IConnection iConn  = (IConnection) conn;
+        return iConn;
     }
 
     /* ************************
@@ -136,6 +153,8 @@ public class Registrar extends UnicastRemoteObject implements IRegistrar {
 
     @Override
     public IAdministrator getAdminInterface(String challenge) throws RemoteException {
+        l.entering("Registrar","getAdminInterface");
+        
         return new Administrator();
     }
 

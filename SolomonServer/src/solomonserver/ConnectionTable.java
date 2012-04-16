@@ -4,10 +4,13 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import static solomonserver.ResultCode.*;
 
 public class ConnectionTable {
+    final private static Logger l = Logger.getLogger("com.cs151.solomon.server");
 
     public enum Filter {
         AVAILABLE, /* available for play, excluding me */
@@ -53,15 +56,13 @@ public class ConnectionTable {
      */
     public IConnection addPlayer( Connection player ) 
     {
+        l.entering("ConnectionTable","addPlayer");
         
         // remove old entry if a duplicate
         Connection duplicatePlayer = findPlayer( player.getTeamName(), player.getOrigin());
         if (duplicatePlayer!=null)
         {
-            System.out.println( "Server: ConnectionTable.add() removed duplicate " 
-                    + duplicatePlayer.getTeamName() 
-                    + ", player list size is now " 
-                    + table.size() );
+            l.log(Level.FINE, "removing duplicate first");
             try { duplicatePlayer.terminateConnection(E_REDUNDANT_PLAYER); } catch (Exception e) {}
             removePlayer( duplicatePlayer );
         }
@@ -72,13 +73,10 @@ public class ConnectionTable {
         
         // now add in the new guy
         table.put(player.getID(),player);
+        l.log(Level.INFO, "adding player {0}", player );
         notifyListeners( new ListAction( ListAction.Action.ADD, new PlayerEntry(player)) );
-        System.out.println( "Server: ConnectionTable.add() added " 
-                + player.getTeamName() 
-                + ", player list size is now " 
-                + table.size() );
+
         return (IConnection)player;
-        // TODO: implement logging
     }
     
     /**
@@ -113,6 +111,8 @@ public class ConnectionTable {
      */
     public void removePlayer( Connection player )
     {
+        l.entering("ConnectionTable","removePlayer");
+        
         table.remove( player.getID() );
         notifyListeners( new ListAction(ListAction.Action.REMOVE, new PlayerEntry(player) ));
     }
@@ -127,6 +127,8 @@ public class ConnectionTable {
     public ArrayList<PlayerEntry> getPlayerList( 
             Connection inquirer )
     {
+        l.entering("ConnectionTable","getPlayerList");
+        
         ArrayList<PlayerEntry> list = new ArrayList<PlayerEntry>();
         Iterator i = table.entrySet().iterator();
         while (i.hasNext()) {
@@ -157,7 +159,7 @@ public class ConnectionTable {
             try {
                 listener.notifyAction(event);
             } catch (Exception e) {
-                System.out.println( "Server: error seding ListAction: " + e );
+                l.log(Level.WARNING, "error sending ListAction",e);
             }
     }
 }

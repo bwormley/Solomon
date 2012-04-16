@@ -1,6 +1,7 @@
 package solomonserver;
 
 import java.util.ArrayList;
+import java.util.logging.Logger;
 
 /**
  *Simple aggregation for matches, for efficiency.  
@@ -9,6 +10,7 @@ import java.util.ArrayList;
  * @author bwormley
  */
 public class MatchTable {
+    final private static Logger l = Logger.getLogger("com.cs151.solomon.server");
     
     private MatchTable() {}
     
