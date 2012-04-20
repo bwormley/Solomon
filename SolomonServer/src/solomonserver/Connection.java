@@ -114,7 +114,6 @@ public class Connection extends UnicastRemoteObject implements IConnection, Seri
         return rc;
     }
     
-    // TODO: implement: make sure object is in correct state to enter a match
     // TODO: result code if an error?  result code object?
     public ResultCode requestMatch( Connection challenger, Match match, int maxNumberOfRounds ) 
             throws RemoteException
@@ -132,7 +131,7 @@ public class Connection extends UnicastRemoteObject implements IConnection, Seri
         changeState( ConnectionState.REQUEST_IN_PROGRESS );
 
         // ask, and if amenable, start the match
-        rc = response.requestToInitiateMatch( challenger.getTeamName(), 
+        rc = response.requestToInitiateMatch( new PlayerEntry(challenger),
                                               maxNumberOfRounds);
         if (rc==RC_OK) {
             this.match = match;

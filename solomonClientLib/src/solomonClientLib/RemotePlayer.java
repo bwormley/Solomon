@@ -265,11 +265,33 @@ public class RemotePlayer
     private INotification notify;
     
     @Override
-    public ResultCode requestToInitiateMatch(String teamName, int maxNumberOfRounds) 
+    public ResultCode requestToInitiateMatch( PlayerEntry challenger, 
+                                              int         maxNumberOfRounds) 
             throws RemoteException {
+        ResultCode rc = RC_OK;
+        
+        // if there's a callback, first try notifying asynchronously
         if (notify!=null)
-            return notify.requestMatch( teamName, maxNumberOfRounds );
-        return E_NOT_IMPLEMENTED;
+            rc =  notify.requestMatch( challenger.teamName, maxNumberOfRounds );
+            
+        // if not implementing async mode, try synchronously, via the GUI
+        if (notify==null || rc!=RC_OK) {
+            Semaphore ourDecisionToAcceptMatch = new Semaphore(1,false);
+            ourDecisionToAcceptMatch.drainPermits();
+            rpSel.displayRemoteInvitationExtended( challenger, maxNumberOfRounds, ourDecisionToAcceptMatch );
+            try {
+                ourDecisionToAcceptMatch.acquire();
+            } catch ( InterruptedException e) {
+                // TODO handle timeouts, local cancel, remote cancel
+            }
+            
+            if (rpSel.getOpponentPlayer()!=null) {
+                startingMatch.release();
+                rc = RC_OK;
+            } else
+                rc = ResultCode.RC_REQUEST_DENIED;
+        }
+        return rc;
     }
 
     @Override

@@ -11,11 +11,12 @@ import solomonserver.Scorecard;
 
 /**
  * This is an ultra simple, minimalist implementation of an RPS client of 
- * Solomon Server.  Except for not being able to accept a remote match request, 
- * this client can play an automated match with a remote player.
+ * Solomon Server.  This client can play an automated match with a remote 
+ * player.
  * 
  * The team name for this client is taken from the first argument in the 
- * command line.  The second argument is the number of rounds to play.
+ * command line.  The second argument is the suggested number of rounds 
+ * to play.
  *
  * @author R Brett Wormley
  */

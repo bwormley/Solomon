@@ -40,15 +40,27 @@ public class RemotePlayerSelector extends javax.swing.JFrame {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
+        cancleButton = new javax.swing.JButton();
+        jPanel1 = new javax.swing.JPanel();
         jScrollPane1 = new javax.swing.JScrollPane();
         playerListbox = new javax.swing.JList();
         inviteToPlayButton = new javax.swing.JButton();
-        Cancel = new javax.swing.JButton();
-        acceptInvitationButton = new javax.swing.JButton();
+        jPanel2 = new javax.swing.JPanel();
         remoteInvitationText = new javax.swing.JTextField();
+        acceptInvitationButton = new javax.swing.JButton();
+        declineInvitationButton = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("Remote Players");
+
+        cancleButton.setText("Cancel");
+        cancleButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                cancleButtonActionPerformed(evt);
+            }
+        });
+
+        jPanel1.setBorder(javax.swing.BorderFactory.createTitledBorder("Invite A Player"));
 
         playerListbox.setFont(new java.awt.Font("Courier New", 0, 12)); // NOI18N
         playerListbox.setModel(listModel);
@@ -67,46 +79,93 @@ public class RemotePlayerSelector extends javax.swing.JFrame {
             }
         });
 
-        Cancel.setText("Cancel");
-        Cancel.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                CancelActionPerformed(evt);
-            }
-        });
+        org.jdesktop.layout.GroupLayout jPanel1Layout = new org.jdesktop.layout.GroupLayout(jPanel1);
+        jPanel1.setLayout(jPanel1Layout);
+        jPanel1Layout.setHorizontalGroup(
+            jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(jPanel1Layout.createSequentialGroup()
+                .addContainerGap()
+                .add(jScrollPane1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 429, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(12, Short.MAX_VALUE))
+            .add(org.jdesktop.layout.GroupLayout.TRAILING, jPanel1Layout.createSequentialGroup()
+                .add(0, 0, Short.MAX_VALUE)
+                .add(inviteToPlayButton))
+        );
+        jPanel1Layout.setVerticalGroup(
+            jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(jPanel1Layout.createSequentialGroup()
+                .add(jScrollPane1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(inviteToPlayButton))
+        );
+
+        jPanel2.setBorder(javax.swing.BorderFactory.createTitledBorder("Accept An Invitation"));
 
         acceptInvitationButton.setText("Accept Invitation");
         acceptInvitationButton.setEnabled(false);
+        acceptInvitationButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                acceptInvitationButtonActionPerformed(evt);
+            }
+        });
+
+        declineInvitationButton.setText("Decline Invitation");
+        declineInvitationButton.setEnabled(false);
+        declineInvitationButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                declineInvitationButtonActionPerformed(evt);
+            }
+        });
+
+        org.jdesktop.layout.GroupLayout jPanel2Layout = new org.jdesktop.layout.GroupLayout(jPanel2);
+        jPanel2.setLayout(jPanel2Layout);
+        jPanel2Layout.setHorizontalGroup(
+            jPanel2Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(org.jdesktop.layout.GroupLayout.TRAILING, jPanel2Layout.createSequentialGroup()
+                .addContainerGap(org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .add(remoteInvitationText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 429, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap())
+            .add(org.jdesktop.layout.GroupLayout.TRAILING, jPanel2Layout.createSequentialGroup()
+                .add(0, 0, Short.MAX_VALUE)
+                .add(declineInvitationButton)
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(acceptInvitationButton))
+        );
+        jPanel2Layout.setVerticalGroup(
+            jPanel2Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(jPanel2Layout.createSequentialGroup()
+                .add(remoteInvitationText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(jPanel2Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                    .add(acceptInvitationButton)
+                    .add(declineInvitationButton)))
+        );
 
         org.jdesktop.layout.GroupLayout layout = new org.jdesktop.layout.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
             .add(layout.createSequentialGroup()
-                .add(6, 6, 6)
-                .add(jScrollPane1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 429, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-            .add(layout.createSequentialGroup()
-                .add(6, 6, 6)
-                .add(remoteInvitationText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 429, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-            .add(layout.createSequentialGroup()
-                .add(12, 12, 12)
-                .add(Cancel)
-                .add(49, 49, 49)
-                .add(acceptInvitationButton)
-                .add(6, 6, 6)
-                .add(inviteToPlayButton))
+                .addContainerGap()
+                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                    .add(layout.createSequentialGroup()
+                        .add(12, 12, 12)
+                        .add(cancleButton)
+                        .add(0, 0, Short.MAX_VALUE))
+                    .add(jPanel1, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .add(jPanel2, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addContainerGap())
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
             .add(layout.createSequentialGroup()
-                .add(6, 6, 6)
-                .add(jScrollPane1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                .add(12, 12, 12)
-                .add(remoteInvitationText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                .add(6, 6, 6)
-                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                    .add(Cancel)
-                    .add(acceptInvitationButton)
-                    .add(inviteToPlayButton)))
+                .add(15, 15, 15)
+                .add(jPanel1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(jPanel2, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(cancleButton)
+                .addContainerGap(org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
         pack();
@@ -136,9 +195,47 @@ public class RemotePlayerSelector extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_inviteToPlayButtonActionPerformed
 
-    private void CancelActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_CancelActionPerformed
+    // called when remote player notifies client of an invitation.  Client 
+    // calls here to display the invitation, and blocks, waiting for response
+    private Semaphore ourDecisionToAcceptMatch;
+    public void displayRemoteInvitationExtended( 
+            PlayerEntry challenger, 
+            int maxNumberOfRounds,
+            Semaphore decision ) {
+        ourDecisionToAcceptMatch = decision;
+        opponentPlayer = challenger;
+        remoteInvitationText.setText( String.format( 
+                "Invitation from %s for a %d round match", 
+                challenger.teamName, 
+                maxNumberOfRounds) );
+        acceptInvitationButton.setEnabled(true);
+        declineInvitationButton.setEnabled(true);
+        /*
+        semaphore waiting on either 
+                1) timeout or 
+                2) remote cancel/timeout or 
+                3) selection from list or 
+                4)! accept or reject match
+        BETTER: while being invited, disable listbox selection; re-enable on not (decline,timeout)
+        */
+    }
+    
+    private void cancleButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cancleButtonActionPerformed
         this.dispose();
-    }//GEN-LAST:event_CancelActionPerformed
+    }//GEN-LAST:event_cancleButtonActionPerformed
+
+    private void acceptInvitationButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_acceptInvitationButtonActionPerformed
+        setVisible(false);
+        ourDecisionToAcceptMatch.release();
+    }//GEN-LAST:event_acceptInvitationButtonActionPerformed
+
+    private void declineInvitationButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_declineInvitationButtonActionPerformed
+        opponentPlayer = null;
+        acceptInvitationButton.setEnabled(false);
+        declineInvitationButton.setEnabled(false);
+        remoteInvitationText.setText("");
+        ourDecisionToAcceptMatch.release();
+    }//GEN-LAST:event_declineInvitationButtonActionPerformed
 
     /**
      * @param args the command line arguments
@@ -183,9 +280,12 @@ public class RemotePlayerSelector extends javax.swing.JFrame {
         });
     }
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JButton Cancel;
     private javax.swing.JButton acceptInvitationButton;
+    private javax.swing.JButton cancleButton;
+    private javax.swing.JButton declineInvitationButton;
     private javax.swing.JButton inviteToPlayButton;
+    private javax.swing.JPanel jPanel1;
+    private javax.swing.JPanel jPanel2;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JList playerListbox;
     private javax.swing.JTextField remoteInvitationText;
