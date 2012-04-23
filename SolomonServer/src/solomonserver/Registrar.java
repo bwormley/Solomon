@@ -18,6 +18,8 @@ public class Registrar extends UnicastRemoteObject implements IRegistrar {
      */
     static String auth = "";
     
+    public final static int PORT = 1099;
+    
     /**
      * the singleton instance of this class
      */
