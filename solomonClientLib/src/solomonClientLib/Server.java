@@ -56,7 +56,7 @@ public class Server  {
     private static final String CLIENT_PROPERTIES_FILENAME = "solomonClient.properties";
     private static final String PROP_FILE_HEADER_COMMENT = "Solomon Client Library Properties File";
     private static final String SERVER_ADDRESS_KEY = "serverAddress";
-    private static final int PING_TIMEOUT = 10; 
+    private static final int PING_TIMEOUT = 15; 
     private static final int PORT_SCAN_TIMEOUT = 100;
     private Properties prop;
     private Server()
