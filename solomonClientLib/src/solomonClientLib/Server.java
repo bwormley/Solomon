@@ -18,6 +18,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.net.NetworkInterface;
 import java.rmi.registry.Registry;
+import java.util.Enumeration;
 
 /**
  * This singleton class encapsulates all synchronous communication to and 
@@ -55,8 +56,9 @@ public class Server  {
     private static final String CLIENT_PROPERTIES_FILENAME = "solomonClient.properties";
     private static final String PROP_FILE_HEADER_COMMENT = "Solomon Client Library Properties File";
     private static final String SERVER_ADDRESS_KEY = "serverAddress";
+    private static final int PING_TIMEOUT = 10; 
+    private static final int PORT_SCAN_TIMEOUT = 100;
     private Properties prop;
-    private String serverAddr;
     private Server()
     {
         // read in persistent properties
@@ -67,7 +69,7 @@ public class Server  {
             prop.load( propReader );
         }
         catch (IOException ex) {
-            Logger.getLogger(Server.class.getName()).log(Level.WARNING, null, ex);
+//            Logger.getLogger(Server.class.getName()).log(Level.WARNING, null, ex);
         }
         if (propReader!=null) {
             try {
@@ -76,9 +78,165 @@ public class Server  {
                 Logger.getLogger(Server.class.getName()).log(Level.WARNING, null, ex);
             }
         }
+    }
+        
+    /**
+     * Find the Solomon Server
+     * 
+     * This function attempts to auto-discover the Solomon Server by an 
+     * exhaustive, iterative process, necessary due to the limitations of 
+     * Java-based network discovery.
+     * 
+     * The general algorithm is to iterate through every network interface on 
+     * the system, and port-scan every address within any qualifying subnet.  
+     * The discovered system is the first found that:
+     *   1) has a 32-bit IP address
+     *   2) is Site Local 
+     *   3) has a subnet with <2^16 addresses (for efficiency), 
+     *   4) is reachable (i.e., an active system) 
+     *   5) allows socket connection to our RMI Registry port
+     * 
+     * @return the URL of the Solomon Server, or null
+     */
+    private String findSolomonServer() {
+        
+        boolean debug = true;
+        
+        String serverAddr = null;
 
-        // find Solomon Server, from properties or from a port scan
-        serverAddr = prop.getProperty(SERVER_ADDRESS_KEY);
+        // if debug mode, dump all interface info
+        if (debug) {
+        try {
+            for ( Enumeration<NetworkInterface> nie = NetworkInterface.getNetworkInterfaces(); nie.hasMoreElements(); ) {
+                NetworkInterface ni = nie.nextElement();
+                if (ni!=null /* && ni.getDisplayName().startsWith("en") */) {
+                    System.out.println( "IF: " + ni.getDisplayName() );
+                    for (InterfaceAddress address : ni.getInterfaceAddresses()) {
+//                        if (address.getAddress().getAddress().length==4 && address.getAddress().isSiteLocalAddress() )
+                            System.out.printf( "    addr: %s   len: %d   prefix len:%d   %s%s%s%s\n", 
+                                    address.getAddress(),
+                                    address.getAddress().getAddress().length,
+                                    address.getNetworkPrefixLength(),
+                                    address.getAddress().isAnyLocalAddress()?"isAnyLocalAddress ":"",
+                                    address.getAddress().isLinkLocalAddress()?"isLinkLocalAddress ":"",
+                                    address.getAddress().isLoopbackAddress()?"isLoopbackAddress ":"",
+                                    address.getAddress().isSiteLocalAddress()?"isSiteLocalAddress ":"" );
+                    }
+                }
+            }
+            } catch (Exception ex) { }
+        }
+        
+        // for every interface on this system
+        boolean bFoundServer = false;
+//        StringBuilder sb = new StringBuilder(); sb.
+        try {
+            for ( Enumeration<NetworkInterface> nie = NetworkInterface.getNetworkInterfaces(); nie.hasMoreElements() && !bFoundServer; ) {
+                NetworkInterface ni = nie.nextElement();
+                if (ni!=null) {
+//                    sb.append( "IF:"+ni);
+                
+                    // for every addresses for this interface
+                    //  (discriminate: only 32-bit addresses, only Site Local addresses, only subnet mask < 2^16)
+                    for (InterfaceAddress address : ni.getInterfaceAddresses()) {
+                        byte[] localIpAddress = address.getAddress().getAddress();
+                        int networkPrefixLength = address.getNetworkPrefixLength();
+                        if (localIpAddress.length==4 && address.getAddress().isSiteLocalAddress() && networkPrefixLength>=16) {
+                            
+                            // for every ip address in the subnet...
+                            long longAddress = arrayToLongIp(localIpAddress);
+                            long mask = (1 << (32-networkPrefixLength) ) -1;
+                            longAddress &= ~mask;
+                            if (debug)
+                                System.out.printf( "Scanning %s/%d from IF: %s\n", arrayIpToString(localIpAddress), networkPrefixLength, ni.getDisplayName() );
+                            for ( int ix=0; ix < ( (1<<(32-networkPrefixLength)) )-1 && !bFoundServer; ix++ ) {
+                                byte[] ip;
+                                longAddress++;
+                                
+                                // if there is an active system at that ip address...
+                                ip = longIpToArray(longAddress);
+                                try {
+                                    InetAddress inAddr = InetAddress.getByAddress(ip);
+                                    if (inAddr.isReachable(PING_TIMEOUT)) { // TODO adjustable timeout?
+
+                                        // if our registry port is active
+                                        // (if socket creation successful)
+                                        Socket sock = new Socket();
+                                        SocketAddress sockAddr = new InetSocketAddress( inAddr, Registrar.PORT);
+                                        sock.connect( sockAddr, PORT_SCAN_TIMEOUT );
+                                        
+                                        
+                                        // WE FOUND THE SOLOMON SERVER (and the right interface to use, too)
+                                        serverAddr = String.format( "//%d.%d.%d.%d:%d/", 
+                                            ((long)ip[0])&0xFF, 
+                                            ((long)ip[1])&0xFF, 
+                                            ((long)ip[2])&0xFF, 
+                                            ((long)ip[3])&0xFF, 
+                                            Registrar.PORT );
+                                        bFoundServer = true;
+                                    }
+                                    
+                                // OK to ignore socket creation failure: scanned system not up
+                                } catch (Exception e) {}
+                            } // for
+                            
+                            // if our port is active, we've found the server
+                        
+                        } // if
+                        
+                    } // for
+                                        
+                } // if
+            } // for
+
+        } // try
+        catch (Exception e ) {}
+
+        return serverAddr;
+    }
+    
+    private byte[] longIpToArray( long longAddr ) {
+        return new byte[] {
+            (byte) ((longAddr>>24)&0xFF),
+            (byte) ((longAddr>>16)&0xFF),
+            (byte) ((longAddr>> 8)&0xFF),
+            (byte)  (longAddr     &0xFF) };
+    }
+    
+    private long arrayToLongIp( byte[] byteAddr ) {
+
+        return   ( ((long)(byteAddr[0]) &0xFF) <<24) 
+               | ( ((long)(byteAddr[1]) &0xFF) <<16) 
+               | ( ((long)(byteAddr[2]) &0xFF) << 8) 
+               |   ((long)(byteAddr[3]) &0xFF);
+    }
+    private String arrayIpToString( byte[] ip ) {
+        return String.format( "%d.%d.%d.%d", 
+            ((long)ip[0])&0xFF, 
+            ((long)ip[1])&0xFF, 
+            ((long)ip[2])&0xFF, 
+            ((long)ip[3])&0xFF);
+    }
+    
+//    finalize()
+//    {
+//        super.finalize();
+//    }
+    
+    public static Server getInstance()
+    {
+        if (_instance==null)
+            _instance = new Server();
+        return _instance;
+    }
+
+    public ResultCode register( String teamName, IResponse response )
+    {
+        ResultCode rc = RC_OK;
+
+        // if we don't hava address of server, search for it (auto-discovery 
+        // via port scan of the local subnet), save it as a property
+        String serverAddr = prop.getProperty(SERVER_ADDRESS_KEY);
         if (serverAddr==null) {
             serverAddr = findSolomonServer();
             if (serverAddr!=null) {
@@ -99,128 +257,27 @@ public class Server  {
                     }
                 }
             }
-        }
-    }
-        
-    private String findSolomonServer() {
-        
-        String serverAddr = null;;
-
-        // port scan for the registry on the local subnet
-            
-        // get local ip address
-        InetAddress localHost = null;
-        byte[] localIpAddress = null;
-        try {
-            localHost = Inet4Address.getLocalHost();
-            localIpAddress = localHost.getAddress();
-            System.out.printf( "local host: %d.%d.%d.%d\n", localIpAddress[0],
-                     + localIpAddress[1],
-                     + localIpAddress[2],
-                     + localIpAddress[3]
-                    );
-        } catch (UnknownHostException ex) {             
-            Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        
-        // get local subnet mask(s)
-        NetworkInterface networkInterface = null;
-        try {
-            networkInterface = NetworkInterface.getByInetAddress(localHost);
-        } catch (SocketException ex) {
-            Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
-        }
-
-        int subnetMaskLength = 1;
-        for (InterfaceAddress address : networkInterface.getInterfaceAddresses()) {
-            System.out.printf( "addr: %s   prefix len:%d   %s%s%s%s\n", 
-                    address.getAddress(), 
-                    address.getNetworkPrefixLength(),
-                    address.getAddress().isAnyLocalAddress()?"isAnyLocalAddress ":"",
-                    address.getAddress().isLinkLocalAddress()?"isLinkLocalAddress ":"",
-                    address.getAddress().isLoopbackAddress()?"isLoopbackAddress ":"",
-                    address.getAddress().isSiteLocalAddress()?"isSiteLocalAddress ":""
-                    );
-            if (address.getAddress().isSiteLocalAddress()) {
-                subnetMaskLength = address.getNetworkPrefixLength();
-//                break;
+            else {
+                Logger.getLogger(Server.class.getName()).log(Level.SEVERE, "SERVER NOT FOUND" );
+                return ResultCode.E_SERVER_NOT_FOUND;                
             }
         }
-            
-        // check localHost first: is registry local?
-            
-        // scan for the rmiregistry in the subnet
-                        
-System.out.printf( "%x %x %x %x\n", localIpAddress[0], localIpAddress[0]<<8, localIpAddress[0]<<16, localIpAddress[0]<<24 );
-        long longAddress = 
-                  ( ((long)(localIpAddress[0]) &0xFF) <<24) 
-                | ( ((long)(localIpAddress[1]) &0xFF) <<16) 
-                | ( ((long)(localIpAddress[2]) &0xFF) << 8) 
-                |   ((long)(localIpAddress[3]) &0xFF);
-        System.out.printf( "localAddress is %x\n", longAddress );
-        long mask = (1 << (32-subnetMaskLength) ) -1;
-        System.out.printf( " with mask of %x and ~mask of %x\n", mask, ~mask );
-        longAddress &= ~mask;
-        System.out.printf( "   and after mask, is %x\n", longAddress );
-        byte[] ip = new byte[4];
-        for ( int ix=0; ix < ( (1<<(32-subnetMaskLength)) )-1; ix++ ) {
-            longAddress++;
-            ip[0] = (byte) ((longAddress>>24)&0xFF);
-            ip[1] = (byte) ((longAddress>>16)&0xFF);
-            ip[2] = (byte) ((longAddress>> 8)&0xFF);
-            ip[3] = (byte)  (longAddress     &0xFF);
-            try {
-                InetAddress inAddr = InetAddress.getByAddress(ip);
-//                System.out.printf( "trying %08x   aka   %d.%d.%d.%d   aka   %s\n", longAddress, ip[0], ip[1], ip[2], ip[3], inAddr );
-                if (inAddr.isReachable(10)) { // TODO adjustable timeout, AND manually settable IP/port
-                    System.out.printf( "trying %08x   aka   %d.%d.%d.%d   aka   %s    ALIVE\n", longAddress, ip[0], ip[1], ip[2], ip[3], inAddr );
-                    Socket sock = new Socket();
-                    SocketAddress sockAddr = new InetSocketAddress( inAddr, 1099);
-                    sock.connect( sockAddr, 100 );
-                    System.out.printf( "    our registry port %d of the ip address %d.%d.%d.%d is in use\n", Registrar.PORT, ip[0], ip[1], ip[2], ip[3] );
-                    serverAddr = String.format( "//%d.%d.%d.%d:%d/", 
-                            ((long)ip[0])&0xFF, 
-                            ((long)ip[1])&0xFF, 
-                            ((long)ip[2])&0xFF, 
-                            ((long)ip[3])&0xFF, 
-                            Registrar.PORT );
-//                   break;
-                }
-            } catch (Exception e) {}
-        }
-        return serverAddr;
-    }
-    
-//    finalize()
-//    {
-//        super.finalize();
-//    }
-    
-    public static Server getInstance()
-    {
-        if (_instance==null)
-            _instance = new Server();
-        return _instance;
-    }
 
-    public ResultCode register( String teamName, IResponse response )
-    {
-        ResultCode rc = RC_OK;
+        // try looking up and registering with the Solomon Server
         try
         {
-            // find the server and register with it
-            IRegistrar registrar = (IRegistrar) Naming.lookup( serverAddr+"Registrar"); // TODO global name
+            IRegistrar registrar = (IRegistrar) Naming.lookup( serverAddr + "Registrar"); // TODO global name
             conn = registrar.register( teamName, response );
-            if (conn==null)
-                rc =  E_REGISTRATION_FAILED;
-            else {
-                    playerID = conn.getID();
-                    if (playerID==0) {
-                        rc = E_REGISTRATION_FAILED;
-                        conn.terminateConnection(E_REGISTRATION_FAILED);
-                        conn = null;
-                    }
+            if (conn!=null) {
+                playerID = conn.getID();
+                if (playerID==0) {
+                    rc = E_REGISTRATION_FAILED;
+                    conn.terminateConnection(E_REGISTRATION_FAILED);
+                    conn = null;
+                }
             }
+            else
+                rc =  E_REGISTRATION_FAILED;
         }
         catch (MalformedURLException e)
         {
@@ -239,6 +296,28 @@ System.out.printf( "%x %x %x %x\n", localIpAddress[0], localIpAddress[0]<<8, loc
             System.out.println( "ClientLib failed registering team '"+teamName+"': "+e);
             rc = E_SERVER_NOT_FOUND; 
         }
+
+        // if we didn't register successfully, clear the server address property
+        if (rc!=RC_OK) {
+            serverAddr = null;
+            FileWriter propWriter = null;
+            prop.setProperty( SERVER_ADDRESS_KEY, serverAddr );
+            try {
+                propWriter = new FileWriter(CLIENT_PROPERTIES_FILENAME);
+                prop.store( propWriter, PROP_FILE_HEADER_COMMENT );
+            }
+            catch (IOException ex) {
+                Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            if (propWriter!=null) {
+                try {
+                    propWriter.close();
+                } catch (IOException ex) {
+                    Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+        }
+        
         return rc;
     }
     
