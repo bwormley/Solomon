@@ -18,7 +18,7 @@ public class Registrar extends UnicastRemoteObject implements IRegistrar {
      */
     static String auth = "";
     
-    public final static int PORT = 1099;
+    public final static int PORT = 1097;
     
     /**
      * the singleton instance of this class
@@ -61,28 +61,30 @@ public class Registrar extends UnicastRemoteObject implements IRegistrar {
         
         // register this server object in RMI registry
         try {
-//            System.out.println("Server: UNexporting old Registrar");
-//            try {
-//                UnicastRemoteObject.unexportObject(registrar, true);
-//            } catch (Exception e) {
-//                System.out.println( "Server: informational (ignored): "+e);
-//            }
+            
+            // get the local RMI Registry instance
+            l.log(Level.INFO,"acquirinig RMI Registry reference");
+            Registry registry = null;
+            try {
+               registry = LocateRegistry.getRegistry( PORT );
+            }
+            catch (RemoteException ex) {
+                l.log(Level.SEVERE,"error locating RMI Registry: ", ex );
+                System.exit(1);
+            }
             
             try {
                 UnicastRemoteObject.unexportObject(this, true);
             } catch (Exception e) {
-                l.log(Level.WARNING,"error unexporting previous Registrar object",e);
+                l.log(Level.WARNING,"error unexporting previous Solomon Registrar object",e);
             }
             
             IRegistrar stub = (IRegistrar)UnicastRemoteObject.exportObject(registrar,0);
-            
-            l.log(Level.CONFIG,"locating registry");
-            Registry registry = LocateRegistry.getRegistry();
-            
-            l.log(Level.INFO,"UNbinding previous registrar");
+                        
+            l.log(Level.INFO,"UNbinding previous Solomon Registrar");
             try { registry.unbind("Registrar"); } catch (Exception e) {}
             
-            l.log(Level.INFO,"binding IRegistrar");
+            l.log(Level.INFO,"binding Solomon Registrar");
             registry.bind("Registrar",stub); 
             // TODO: make this global string
             // TOD: rebind?
