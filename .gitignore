@@ -20,3 +20,9 @@ SolomonServer/docs/SolomonServer_FuncSpec.odt
 .DS_Store
 todo.txt~
 todo.txt
+mkDist~
+SolomonServer/solomon.log
+SolomonServer/solomon.log.1
+SolomonServer/solomon.log~
+genericClient/solomon.log
+solomon.log
