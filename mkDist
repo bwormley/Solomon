@@ -1,0 +1,5 @@
+#!/bin/bash
+
+jar cvf dist/solomon.jar -C solomonClientLib/build/classes solomonClientLib
+jar uvf dist/solomon.jar -C SolomonServer/build/classes solomonserver
+jar uvf dist/solomon.jar -C genericClient/build/classes genericClient
