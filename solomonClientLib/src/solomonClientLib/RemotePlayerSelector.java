@@ -198,10 +198,12 @@ public class RemotePlayerSelector extends javax.swing.JFrame {
     // called when remote player notifies client of an invitation.  Client 
     // calls here to display the invitation, and blocks, waiting for response
     private Semaphore ourDecisionToAcceptMatch;
+    private int suggestedNumberOfRounds;
     public void displayRemoteInvitationExtended( 
             PlayerEntry challenger, 
             int maxNumberOfRounds,
             Semaphore decision ) {
+        suggestedNumberOfRounds = maxNumberOfRounds;
         ourDecisionToAcceptMatch = decision;
         opponentPlayer = challenger;
         remoteInvitationText.setText( String.format( 
@@ -226,6 +228,7 @@ public class RemotePlayerSelector extends javax.swing.JFrame {
 
     private void acceptInvitationButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_acceptInvitationButtonActionPerformed
         setVisible(false);
+        Server.getInstance().setNumberOfRounds( suggestedNumberOfRounds );
         ourDecisionToAcceptMatch.release();
     }//GEN-LAST:event_acceptInvitationButtonActionPerformed
 

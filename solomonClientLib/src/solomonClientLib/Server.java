@@ -325,6 +325,10 @@ public class Server  {
         this.numberOfRounds = numberOfRounds;
     }
     
+    public int getNumberOfRounds() {
+        return numberOfRounds;
+    }
+    
     public ArrayList<PlayerEntry> getAvailablePlayersList()
     {
         ArrayList<PlayerEntry> list = new ArrayList<PlayerEntry>();

@@ -33,9 +33,9 @@ public class RemotePlayer
      */
     private static RemotePlayer _instance = null;
 
-    /* ****************************************
-     * PUBLIC APPLICATION PROGRAMMING INTERFACE
-     * ****************************************
+    /* ***********************************************
+     * CLIENT-FACING APPLICATION PROGRAMMING INTERFACE
+     * ***********************************************
      */
     
     /**
@@ -74,18 +74,19 @@ public class RemotePlayer
         ResultCode rc;
         this.teamName = teamName;
         rc = Server.getInstance().register( teamName, (IResponse)this );
-        if (rc==RC_OK)
-            this.notify = notify;
+        this.notify = (rc==RC_OK) ? notify : null;
         return rc; 
     }
     
     /**
      * Set the number of rounds requested for this match.  This will be the 
      * number of rounds requested when inviting a remote player to a match.
-     * If,instead, this local player accepts an invitation from another 
+     * If, instead, this local player accepts an invitation from another 
      * player, the number of rounds specified by that player will take 
      * precedence.  So, for the general case, the local player should heed the 
-     * actual number of rounds to play, as shown in each Scorecard record.
+     * actual number of rounds to play, as shown in each Scorecard record.  
+     * Note: this call is only effective before a match has initiated 
+     * (i.e., before the call to startMatch())
      * 
      * Typically, this method is used when it is inconvenient for the client 
      * to access the number of rounds when calling the startMatch() method.
@@ -93,14 +94,28 @@ public class RemotePlayer
      * @param numberOfRounds number of rounds to play, in the invitation 
      * to a remote player
      */
-    private int numberOfRounds = 256;
+    private final int DEFAULT_NUMBER_OF_ROUNDS = 256;
+    private int numberOfRounds = DEFAULT_NUMBER_OF_ROUNDS;
     public void setNumberOfRounds( int numberOfRoundsRequested ) {
         numberOfRounds = numberOfRoundsRequested;
     }
     
     /**
-     * Initiate a match with a remote player, requesting a certain number of 
-     * rounds of play.
+     * Return the number of rounds for this match.  This may be different 
+     * than requested by the local client if he accepted a remote invitation.  
+     * Accepting the remote invitation alos accepts the number of rounds in 
+     * the invitation.
+     * 
+     * @return number of rounds in the match
+     */
+    public int getNumberOfRounds() {
+        return numberOfRounds;
+    }
+    
+    /**
+     * Initiate a match with a remote player, resulting in either requesting 
+     * a certain number of rounds of play, or accepting an invitation from 
+     * a remote player.
      * 
      * Note: this call will typically query the Solomon Server for a list of 
      * active, available  players, and present a Dialog Box for the user to 
@@ -113,7 +128,8 @@ public class RemotePlayer
      * than one, then the number of rounds specified in setNumberOfRounds() 
      * is used.  See that method description for the meaning of 
      * 'number of rounds.'  If less than one, and no value was set using 
-     * setNumberOfRounds(), the number of rounds defaults to 256.
+     * setNumberOfRounds(), the number of rounds defaults to 
+     * DEFAULT_NUMBER_OF_ROUNDS.
      * 
      * @return 
      */
@@ -150,7 +166,7 @@ public class RemotePlayer
         startingMatch.drainPermits();
         rpSel = new RemotePlayerSelector(startingMatch);
         
-        // run the selector dialog with default L&F
+        // run the selector dialog with default look&feel
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
                 rpSel.setVisible(true);
@@ -166,6 +182,8 @@ public class RemotePlayer
         PlayerEntry opponentPlayer = rpSel.getOpponentPlayer();
         if (opponentPlayer!=null)
             opponentName = opponentPlayer.teamName;
+        numberOfRounds = Server.getInstance().getNumberOfRounds();
+        System.out.printf( "%s negotiated %d rounds\n", Server.getInstance().playerID, numberOfRounds );
         
         // match in play: fire up the score box
         gameStatus = new GameStatus( teamName, opponentName, numberOfRounds );
