@@ -183,7 +183,6 @@ public class RemotePlayer
         if (opponentPlayer!=null)
             opponentName = opponentPlayer.teamName;
         numberOfRounds = Server.getInstance().getNumberOfRounds();
-        System.out.printf( "%s negotiated %d rounds\n", Server.getInstance().playerID, numberOfRounds );
         
         // match in play: fire up the score box
         gameStatus = new GameStatus( teamName, opponentName, numberOfRounds );

@@ -18,7 +18,7 @@ public class Registrar extends UnicastRemoteObject implements IRegistrar {
      */
     static String auth = "";
     
-    public final static int PORT = 1097;
+    public final static int PORT = 1099;
     
     /**
      * the singleton instance of this class
@@ -51,28 +51,12 @@ public class Registrar extends UnicastRemoteObject implements IRegistrar {
         // TODO: if not running, programmatically start RMIRegistry with 
         Registry registry = null;
         registry = LocateRegistry.createRegistry( PORT );
-/*
-        System.out.println("Server: in Registrar constructor");
-        try {
-            Registrar.setLog(System.out);
-        } catch (Exception e) {
-            System.out.println( "Server: problem directing error log: " + e);
-        }
-*/
         
         // register this server object in RMI registry
         try {
             
             // get the local RMI Registry instance
             l.log(Level.INFO,"acquirinig RMI Registry reference");
-//            Registry registry = null;
-//            try {
-//               registry = LocateRegistry.getRegistry( PORT );
-//            }
-//            catch (RemoteException ex) {
-//                l.log(Level.SEVERE,"error locating RMI Registry: ", ex );
-//                System.exit(1);
-//            }
             
             try {
                 UnicastRemoteObject.unexportObject(this, true);
