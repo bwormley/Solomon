@@ -49,7 +49,8 @@ public class Registrar extends UnicastRemoteObject implements IRegistrar {
         l.entering("Registrar","startServer");
         
         // TODO: if not running, programmatically start RMIRegistry with 
-        // java.rmi.registry.LocateRegistry.createRegistry()
+        Registry registry = null;
+        registry = LocateRegistry.createRegistry( PORT );
 /*
         System.out.println("Server: in Registrar constructor");
         try {
@@ -64,14 +65,14 @@ public class Registrar extends UnicastRemoteObject implements IRegistrar {
             
             // get the local RMI Registry instance
             l.log(Level.INFO,"acquirinig RMI Registry reference");
-            Registry registry = null;
-            try {
-               registry = LocateRegistry.getRegistry( PORT );
-            }
-            catch (RemoteException ex) {
-                l.log(Level.SEVERE,"error locating RMI Registry: ", ex );
-                System.exit(1);
-            }
+//            Registry registry = null;
+//            try {
+//               registry = LocateRegistry.getRegistry( PORT );
+//            }
+//            catch (RemoteException ex) {
+//                l.log(Level.SEVERE,"error locating RMI Registry: ", ex );
+//                System.exit(1);
+//            }
             
             try {
                 UnicastRemoteObject.unexportObject(this, true);
