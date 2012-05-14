@@ -16,7 +16,7 @@ public class Connection extends UnicastRemoteObject implements IConnection, Seri
     private String origin = null;
     private IResponse response;
     private Match match = null;
-    private Date lastKeepAliveReceived = new Date();
+    public Date lastKeepaliveReceived = new Date();
     private boolean bNotAcceptingMatches = false;
 
     private ConnectionState state = ConnectionState.DISCONNECTED;
@@ -65,7 +65,7 @@ public class Connection extends UnicastRemoteObject implements IConnection, Seri
     public void keepAlive()
             throws RemoteException
     {
-        lastKeepAliveReceived = new Date();
+        lastKeepaliveReceived = new Date();
     } 
            
     

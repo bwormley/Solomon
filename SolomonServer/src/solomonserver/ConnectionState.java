@@ -9,4 +9,6 @@ public enum ConnectionState {
     AVAILABLE_FOR_PLAY,
     REQUEST_IN_PROGRESS,
     MATCH_IN_PLAY,
+    ZOMBIE,
+    ADMINISTRATIVE,
 }

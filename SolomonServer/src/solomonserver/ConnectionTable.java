@@ -1,15 +1,17 @@
 package solomonserver;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.Timer;
 
 import static solomonserver.ResultCode.*;
 
-public class ConnectionTable {
+public class ConnectionTable 
+    implements ActionListener {
+    
     final private static Logger l = Logger.getLogger("com.cs151.solomon.server");
 
     public enum Filter {
@@ -20,11 +22,55 @@ public class ConnectionTable {
     /**
      * Maximum number of connections before the server declines requests
      */
-    static final int MAX_CONNECTIONS = 32;
+    static final int MAX_CONNECTIONS = 16;
     
     private ConnectionTable()
     {
         table = new HashMap<Integer,Connection>();
+        
+        // spawn the zombie killer thread
+        zombieKiller.start();
+    }
+    
+    /**
+     * frequency of invocation of thread to check every connection's 
+     * keepalive status, in milliseconds
+     */
+    
+    private final int ZOMBIE_HEARTBEAT = 5000;
+    
+    /**
+     * time after which we consider a connection dead, in seconds
+     */
+    private final int ZOMBIE_DELAY = 30;
+    
+    /**
+     * Timer object for repeating invocation of thread that searches and 
+     * removes zombie connections
+     */
+    private Timer zombieKiller = new Timer(ZOMBIE_HEARTBEAT,this);
+    
+    /**
+     * method executed on the thread that periodically searches for 
+     * zombie connections
+     * 
+     * @param evt unused
+     */
+    @Override
+    public void actionPerformed(ActionEvent evt) {
+        // wait until we can acquire lock on this table
+        // determine time at which we give up on a connection
+        Calendar now = Calendar.getInstance();
+        now.add(Calendar.SECOND,-ZOMBIE_DELAY);
+        Date presumedDead = new Date(now.getTimeInMillis());
+        Iterator<Map.Entry<Integer,Connection>> ix = table.entrySet().iterator();
+        while (ix.hasNext()) {
+            Map.Entry<Integer,Connection> entry = ix.next();
+            if (entry.getValue().lastKeepaliveReceived.compareTo(presumedDead)<0) {
+                entry.getValue().changeState(ConnectionState.ZOMBIE);
+                // TODO: notify (abort connect, both sides of a match, signal match termination for logging
+            }
+        }
     }
     
     private static HashMap<Integer,Connection> table = null;

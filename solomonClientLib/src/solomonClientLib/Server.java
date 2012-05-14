@@ -1,6 +1,8 @@
 package solomonClientLib;
 
 
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -19,6 +21,7 @@ import java.util.logging.Logger;
 import java.net.NetworkInterface;
 import java.rmi.registry.Registry;
 import java.util.Enumeration;
+import javax.swing.Timer;
 
 /**
  * This singleton class encapsulates all synchronous communication to and 
@@ -27,7 +30,8 @@ import java.util.Enumeration;
  * added by this class is that it encapsulates finding, registering, and 
  * unregistering with the server. 
  */
-public class Server  {
+public class Server 
+    implements ActionListener  {
     
     private static Server _instance = null;
     private IConnection conn = null;
@@ -78,6 +82,14 @@ public class Server  {
                 Logger.getLogger(Server.class.getName()).log(Level.WARNING, null, ex);
             }
         }
+        
+        // start our keepalive timer
+        keepMeAlive.start();
+    }
+    private final int HEARTBEAT_PERIOD = 2500; // TODO baed on 1/2 of server zombie period
+    private Timer keepMeAlive = new Timer(HEARTBEAT_PERIOD,this);
+    public void actionPerformed( ActionEvent evt ) {
+        try { conn.keepAlive(); } catch (Exception e) {}
     }
         
     /**
