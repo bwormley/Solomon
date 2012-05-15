@@ -86,10 +86,30 @@ public class Server
         // start our keepalive timer
         keepMeAlive.start();
     }
-    private final int HEARTBEAT_PERIOD = 2500; // TODO baed on 1/2 of server zombie period
+    
+    // TODO: heartbeat should be 1/2 of server's zombie timeout
+    /**
+     * Period to notify server that we're still alive, in milliseconds
+     */
+    private final int HEARTBEAT_PERIOD = 2500;
+    
+    /**
+     * Timer for generating keepalive heartbeat
+     */
     private Timer keepMeAlive = new Timer(HEARTBEAT_PERIOD,this);
+    
+    /**
+     * At every heartbeat, notify the server that we're still alive.
+     * 
+     * @param evt unused
+     */
+    @Override
     public void actionPerformed( ActionEvent evt ) {
-        try { conn.keepAlive(); } catch (Exception e) {}
+        try { 
+            if (conn!=null) 
+                conn.keepAlive(); 
+        } 
+        catch (Exception e) {}
     }
         
     /**
@@ -104,7 +124,7 @@ public class Server
      * The discovered system is the first found that:
      *   1) has a 32-bit IP address
      *   2) is Site Local 
-     *   3) has a subnet with <2^16 addresses (for efficiency), 
+     *   3) has a subnet with less than 2^16 addresses (for efficiency), 
      *   4) is reachable (i.e., an active system) 
      *   5) allows socket connection to our RMI Registry port
      * 
@@ -121,7 +141,7 @@ public class Server
         try {
             for ( Enumeration<NetworkInterface> nie = NetworkInterface.getNetworkInterfaces(); nie.hasMoreElements(); ) {
                 NetworkInterface ni = nie.nextElement();
-                if (ni!=null /* && ni.getDisplayName().startsWith("en") */) {
+                if (ni!=null) {
                     System.out.println( "IF: " + ni.getDisplayName() );
                     for (InterfaceAddress address : ni.getInterfaceAddresses()) {
 //                        if (address.getAddress().getAddress().length==4 && address.getAddress().isSiteLocalAddress() )
@@ -141,12 +161,10 @@ public class Server
         
         // for every interface on this system
         boolean bFoundServer = false;
-//        StringBuilder sb = new StringBuilder(); sb.
         try {
             for ( Enumeration<NetworkInterface> nie = NetworkInterface.getNetworkInterfaces(); nie.hasMoreElements() && !bFoundServer; ) {
                 NetworkInterface ni = nie.nextElement();
                 if (ni!=null) {
-//                    sb.append( "IF:"+ni);
                 
                     // for every addresses for this interface
                     //  (discriminate: only 32-bit addresses, only Site Local addresses, only subnet mask < 2^16)
@@ -176,7 +194,6 @@ public class Server
                                         Socket sock = new Socket();
                                         SocketAddress sockAddr = new InetSocketAddress( inAddr, Registrar.PORT);
                                         sock.connect( sockAddr, PORT_SCAN_TIMEOUT );
-                                        
                                         
                                         // WE FOUND THE SOLOMON SERVER (and the right interface to use, too)
                                         serverAddr = String.format( "//%d.%d.%d.%d:%d/", 
@@ -230,44 +247,63 @@ public class Server
             ((long)ip[3])&0xFF);
     }
     
-//    finalize()
-//    {
-//        super.finalize();
-//    }
-    
+    /**
+     * Retrieve the singleton instance for this class, creating one 
+     * if necessary.
+     * 
+     * @return the instance
+     */
     public static Server getInstance()
     {
         if (_instance==null)
             _instance = new Server();
         return _instance;
     }
+    
+    public String getProperty( String key ) {
+        return prop.getProperty( key );
+    }
+    
+    public void setProperty( String key, String value ) {
+        FileWriter propWriter = null;
+        prop.setProperty( key, value );
+        try {
+            propWriter = new FileWriter(CLIENT_PROPERTIES_FILENAME);
+            prop.store( propWriter, PROP_FILE_HEADER_COMMENT );
+        }
+        catch (IOException ex) {
+            Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        if (propWriter!=null) {
+            try {
+                propWriter.close();
+            } catch (IOException ex) {
+                Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }
 
+    /**
+     * Locate (if necessary) and register our client with the Solomon Server.  
+     * This should be the first call to this client-side Server proxy.
+     * 
+     * @param teamName name of this client, unique per IP address
+     * @param response listener for server callbacks.  May not be null for 
+     * this class, but may have interface methods which return an 
+     * 'unimplemented' status
+     * @return RC_OK if registration successful
+     */
     public ResultCode register( String teamName, IResponse response )
     {
         ResultCode rc = RC_OK;
 
-        // if we don't hava address of server, search for it (auto-discovery 
+        // if we don't have address of server, search for it (auto-discovery 
         // via port scan of the local subnet), save it as a property
         String serverAddr = prop.getProperty(SERVER_ADDRESS_KEY);
         if (serverAddr==null) {
             serverAddr = findSolomonServer();
             if (serverAddr!=null) {
-                FileWriter propWriter = null;
-                prop.setProperty( SERVER_ADDRESS_KEY, serverAddr );
-                try {
-                    propWriter = new FileWriter(CLIENT_PROPERTIES_FILENAME);
-                    prop.store( propWriter, PROP_FILE_HEADER_COMMENT );
-                }
-                catch (IOException ex) {
-                    Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
-                }
-                if (propWriter!=null) {
-                    try {
-                        propWriter.close();
-                    } catch (IOException ex) {
-                        Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
-                    }
-                }
+                setProperty( SERVER_ADDRESS_KEY, serverAddr );
             }
             else {
                 Logger.getLogger(Server.class.getName()).log(Level.SEVERE, "SERVER NOT FOUND" );
@@ -311,23 +347,7 @@ public class Server
 
         // if we didn't register successfully, clear the server address property
         if (rc!=RC_OK) {
-            serverAddr = null;
-            FileWriter propWriter = null;
-            prop.setProperty( SERVER_ADDRESS_KEY, serverAddr );
-            try {
-                propWriter = new FileWriter(CLIENT_PROPERTIES_FILENAME);
-                prop.store( propWriter, PROP_FILE_HEADER_COMMENT );
-            }
-            catch (IOException ex) {
-                Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
-            }
-            if (propWriter!=null) {
-                try {
-                    propWriter.close();
-                } catch (IOException ex) {
-                    Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
-                }
-            }
+            setProperty( SERVER_ADDRESS_KEY, null );
         }
         
         return rc;

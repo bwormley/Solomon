@@ -27,7 +27,15 @@ public class ConnectionTable
     private ConnectionTable()
     {
         table = new HashMap<Integer,Connection>();
-        
+
+        /* pull zombie delay from properties;
+        // TODO need registrar object
+        String zombieDelayString = registrar.getProperty( ZOMBIE_DELAY_KEY );
+        if (zombieDelayString!=null) {
+            zombieDelay = Integer.parseInt(zombieDelayString);
+        }
+        */
+                
         // spawn the zombie killer thread
         zombieKiller.start();
     }
@@ -42,7 +50,9 @@ public class ConnectionTable
     /**
      * time after which we consider a connection dead, in seconds
      */
-    private final int ZOMBIE_DELAY = 30;
+    private final int ZOMBIE_DELAY = 30000; // TODO settable at 30;
+    private int zombieDelay = ZOMBIE_DELAY;
+    private final String ZOMBIE_DELAY_KEY = "zombieDelay";
     
     /**
      * Timer object for repeating invocation of thread that searches and 
@@ -61,7 +71,7 @@ public class ConnectionTable
         // wait until we can acquire lock on this table
         // determine time at which we give up on a connection
         Calendar now = Calendar.getInstance();
-        now.add(Calendar.SECOND,-ZOMBIE_DELAY);
+        now.add(Calendar.SECOND,-zombieDelay);
         Date presumedDead = new Date(now.getTimeInMillis());
         Iterator<Map.Entry<Integer,Connection>> ix = table.entrySet().iterator();
         while (ix.hasNext()) {

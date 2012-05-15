@@ -45,22 +45,25 @@ public class GenericClient implements INotification {
             System.exit(1);
         }
         
-        // request/start a match
-        rc = remote.startMatch( numberOfRounds );
-        if (rc!=RC_OK) {
-            System.out.println( "Failed to start match: " + rc );
-            System.exit(1);
-        }
+        while (true) {
         
-        // play rounds until finished
-        do {
-            rc = remote.doGesture( newGesture() );
-            score = remote.getScore();
-            if (score!=null) {
-                System.out.println( score );
-                bDone = score.roundsPlayed>=score.maxRounds;
+            // request/start a match
+            rc = remote.startMatch( numberOfRounds );
+            if (rc!=RC_OK) {
+                System.out.println( "Failed to start match: " + rc );
+                System.exit(1);
             }
-        } while (!bDone);
+        
+            // play rounds until finished
+            do {
+                rc = remote.doGesture( newGesture() );
+                score = remote.getScore();
+                if (score!=null) {
+                    System.out.println( score );
+                    bDone = score.roundsPlayed>=score.maxRounds;
+                }
+            } while (!bDone);
+        }
     }
     
     
