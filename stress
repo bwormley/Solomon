@@ -1,0 +1,34 @@
+#!/bin/bash
+
+java -jar genericClient/dist/genericClient.jar Albert   4096 &
+sleep 1
+java -jar genericClient/dist/genericClient.jar Betty    4096 &
+sleep 1
+java -jar genericClient/dist/genericClient.jar Charles  4096 &
+sleep 1
+java -jar genericClient/dist/genericClient.jar Dana     4096 &
+sleep 1
+java -jar genericClient/dist/genericClient.jar Edward   4096 &
+sleep 1
+java -jar genericClient/dist/genericClient.jar Francine 4096 &
+sleep 1
+java -jar genericClient/dist/genericClient.jar Gregory  4096 &
+sleep 1
+java -jar genericClient/dist/genericClient.jar Helene   4096 &
+sleep 1
+java -jar genericClient/dist/genericClient.jar Irving   4096 &
+sleep 1
+java -jar genericClient/dist/genericClient.jar Jessica  4096 &
+sleep 1
+java -jar genericClient/dist/genericClient.jar Kevin    4096 &
+sleep 1
+java -jar genericClient/dist/genericClient.jar Lisa     4096 &
+sleep 1
+java -jar genericClient/dist/genericClient.jar Michael  4096 &
+sleep 1
+java -jar genericClient/dist/genericClient.jar Nancy    4096 &
+sleep 1
+java -jar genericClient/dist/genericClient.jar Olivar   4096 &
+sleep 1
+java -jar genericClient/dist/genericClient.jar Percita  4096 &
+
